@@ -1,0 +1,11 @@
+/.vscode/
+*.out
+*.exe
+*.dll
+*.pdb
+*.mdb
+*.lib
+*.obj
+*.o
+*.a
+*.so
