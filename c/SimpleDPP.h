@@ -5,13 +5,15 @@
 // define SimpleDPP receive error code
 // level 0:
 #define SIMPLEDPP_RECEIVE_ERROR -1
-#define SIMPLEDPP_SENDFAILED -2
+#define SIMPLEDPP_SENDFAILED -2  //USING
+#define SIMPLEDPP_NORMAL 0  
 // level 1:
-#define SIMPLEDPP_ERROR_REV_OVER_CAPACITY -11
-#define SIMPLEDPP_ERROR_SEND_OVER_CAPACITY -12
+#define SIMPLEDPP_ERROR_REV_OVER_CAPACITY -11 //USING
+#define SIMPLEDPP_ERROR_SEND_OVER_CAPACITY -12 
 // level 2:
-#define SIMPLEDPP_ERROR_REV_SOH_WHEN_WAIT_END -21
-#define SIMPLEDPP_ERROR_REV_NONCTRL_BYTE_WHEN_WAIT_CTRL_BYTE -22
+#define SIMPLEDPP_ERROR_REV_SOH_WHEN_WAIT_END -21 //USING
+#define SIMPLEDPP_ERROR_REV_NONCTRL_BYTE_WHEN_WAIT_CTRL_BYTE -22 //USING
+#define SIMPLEDPP_CRC_CHECK_ERROR -23 
 
 //cast char * to byte *
 #define byte unsigned char
@@ -35,11 +37,11 @@ typedef int SimpleDPPERROR;
 
 // Externally provided methods
 void SimpleDPP_init(byte *send_data, int send_capacity, byte *recv_data, int recv_capacity);
-int SimpleDPP_send(byte *data, int len);
+int SimpleDPP_send(const byte *data, int len);
 void SimpleDPP_parse(byte c);
 int getSimpleDPPErrorCnt();
-__unimplemented void SimpleDPPRecvCallback(byte *data, int len);
-__unimplemented void SimpleDPPErrorCallback(SimpleDPPERROR error_code);
+__unimplemented void SimpleDPPRecvCallback(const byte *data, int len);
+__unimplemented void SimpleDPPRevErrorCallback(SimpleDPPERROR error_code);
 __unimplemented byte SimpleDPP_putchar(byte c);
 
 #endif // _SIMPLE_DPP_H_

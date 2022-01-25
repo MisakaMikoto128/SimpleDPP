@@ -9,3 +9,14 @@
 *.o
 *.a
 *.so
+*/.idea/
+*/out/
+*.iml
+*.asv
+*.clear
+A.m
+/test*/
+*/__pycache__/
+python/test.py
+/qt/build*/
+*.gch

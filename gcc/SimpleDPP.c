@@ -1,18 +1,30 @@
 #include "SimpleDPP.h"
-
+#define size_t unsigned int
 static void SimpleDPP_send_buffer();
 static void SimpleDPPRecvInnerCallback();
-static void SimpleDPPErrorInnerCallback(SimpleDPPERROR error_code);
+static void SimpleDPPRevErrorInnerCallback(SimpleDPPERROR error_code);
 static Buffer send_buffer;
 static Buffer recv_buffer;
 static int SimpleDPPErrorCnt;
 static int SimpleDPPRevState;
+
+__attribute__((weak)) byte __send_data[SIMPLEDDP_DEFAULT_BUFFER_SIZE];
+__attribute__((weak)) byte __recv_data[SIMPLEDDP_DEFAULT_BUFFER_SIZE];
+
 // #define SimpleDPP_ESCAPE_CHAR_LEN 2
 // static char SimpleDPP_control_byte_buf[SimpleDPP_ESCAPE_CHAR_LEN] = {0};
-void SimpleDPP_init(byte *send_data, int send_capacity, byte *recv_data, int recv_capacity)
+void SimpleDPP_init(int send_capacity,int recv_capacity)
 {
-    buffser_setmemory(&send_buffer, send_data, send_capacity);
-    buffser_setmemory(&recv_buffer, recv_data, recv_capacity);
+    buffer_setmemory(&send_buffer, __send_data, send_capacity);
+    buffer_setmemory(&recv_buffer, __recv_data, recv_capacity);
+    SimpleDPPErrorCnt = 0;
+    SimpleDPPRevState = SIMPLEDPP_REV_WAIT_START;
+}
+
+void SimpleDPP_default_init()
+{
+    buffer_setmemory(&send_buffer, __send_data, SIMPLEDDP_DEFAULT_BUFFER_SIZE);
+    buffer_setmemory(&recv_buffer, __recv_data, SIMPLEDDP_DEFAULT_BUFFER_SIZE);
     SimpleDPPErrorCnt = 0;
     SimpleDPPRevState = SIMPLEDPP_REV_WAIT_START;
 }
@@ -32,9 +44,9 @@ static void SimpleDPPRecvInnerCallback()
     buffer_clear(&recv_buffer);
 }
 
-static void SimpleDPPErrorInnerCallback(SimpleDPPERROR error_code)
+static void SimpleDPPRevErrorInnerCallback(SimpleDPPERROR error_code)
 {
-    SimpleDPPErrorCallback(error_code);
+    SimpleDPPRevErrorCallback(error_code);
     buffer_clear(&recv_buffer);
     SimpleDPPErrorCnt++;
 }
@@ -48,7 +60,7 @@ Return:
     success: send data length
     fail: SAMPLE_ERROR
 */
-int SimpleDPP_send(byte *data, int len)
+int SimpleDPP_send(const byte *data, int len)
 {
     int i;
     //1. empty buffer
@@ -79,21 +91,15 @@ int SimpleDPP_send(byte *data, int len)
         }
     }
     //4. push EOT
-    buffer_push(&send_buffer, EOT);
+    if(buffer_push(&send_buffer, EOT) == OVER_CAPACITY_ERROR)
+    {
+        return SIMPLEDPP_SENDFAILED;
+    }
     //5. send message
     SimpleDPP_send_buffer();
     return len;
 }
 // SimpleDPP receive state machine's states
-// SimpleDPP receive state machine's states
-#define SIMPLEDPP_REV_WAIT_START 0
-#define SIMPLEDPP_REV_WAIT_END 1
-#define SIMPLEDPP_REV_WAIT_CTRL_BYTE 2
-
-// SimpleDPP frame control byte (The frame delimiter)
-#define SOH 0x01 //DEC: 1
-#define EOT 0x04 //DEC: 4
-#define ESC 0x18 //DEC: 27
 void SimpleDPP_parse(byte c)
 {
     switch (SimpleDPPRevState)
@@ -105,34 +111,15 @@ void SimpleDPP_parse(byte c)
         }
         break;
     case SIMPLEDPP_REV_WAIT_END:
-        // {
-        //     // deprecate
-        // if(c == EOT){
-        //     SimpleDPPRevState = SIMPLEDPP_REV_WAIT_START;
-        //     SimpleDPPRecvInnerCallback(recv_buffer.data, recv_buffer.size);
-        // }
-        // else if(c == ESC){
-        //     SimpleDPPRevState = SIMPLEDPP_REV_WAIT_CTRL_BYTE;
-        // }else if(c == SOH){
-        //     SimpleDPPRevState = SIMPLEDPP_REV_WAIT_START;
-        //     SimpleDPPErrorInnerCallback();
-        // }
-        // else{
-        //     if(buffer_push(&recv_buffer, c) == OVER_CAPACITY_ERROR){
-        //         SimpleDPPErrorInnerCallback();
-        //     }
-        // }
-        // }
-
         switch (c)
         {
         case SOH:
             SimpleDPPRevState = SIMPLEDPP_REV_WAIT_START;
-            SimpleDPPErrorInnerCallback(SIMPLEDPP_ERROR_REV_SOH_WHEN_WAIT_END);
+            SimpleDPPRevErrorInnerCallback(SIMPLEDPP_ERROR_REV_SOH_WHEN_WAIT_END);
             break;
         case EOT:
             SimpleDPPRevState = SIMPLEDPP_REV_WAIT_START;
-            SimpleDPPRecvInnerCallback(recv_buffer.data, recv_buffer.size);
+            SimpleDPPRecvInnerCallback();
             break;
         case ESC:
             SimpleDPPRevState = SIMPLEDPP_REV_WAIT_CTRL_BYTE;
@@ -140,7 +127,7 @@ void SimpleDPP_parse(byte c)
         default:
             if (buffer_push(&recv_buffer, c) == OVER_CAPACITY_ERROR)
             {
-                SimpleDPPErrorInnerCallback(SIMPLEDPP_ERROR_REV_OVER_CAPACITY);
+                SimpleDPPRevErrorInnerCallback(SIMPLEDPP_ERROR_REV_OVER_CAPACITY);
             }
             break;
         }
@@ -150,15 +137,43 @@ void SimpleDPP_parse(byte c)
         {
             if (buffer_push(&recv_buffer, c) == OVER_CAPACITY_ERROR)
             {
-                SimpleDPPErrorInnerCallback(SIMPLEDPP_ERROR_REV_OVER_CAPACITY);
+                SimpleDPPRevErrorInnerCallback(SIMPLEDPP_ERROR_REV_OVER_CAPACITY);
             }
             SimpleDPPRevState = SIMPLEDPP_REV_WAIT_END;
         }
         else
         {
-            SimpleDPPErrorInnerCallback(SIMPLEDPP_ERROR_REV_NONCTRL_BYTE_WHEN_WAIT_CTRL_BYTE);
+            SimpleDPPRevErrorInnerCallback(SIMPLEDPP_ERROR_REV_NONCTRL_BYTE_WHEN_WAIT_CTRL_BYTE);
         }
         break;
+    default:
+        break;
+    }
+}
+
+
+
+__attribute__((weak)) void SimpleDPPRecvCallback(const byte *data, int len)
+{
+    __unimplemented
+}
+__attribute__((weak)) byte SimpleDPP_putchar(byte c)
+{
+   __unimplemented
+    return c;
+}
+
+__attribute__((weak)) void SimpleDPPRevErrorCallback(SimpleDPPERROR error_code){
+    __unimplemented
+    switch (error_code)
+    {
+    case SIMPLEDPP_ERROR_REV_SOH_WHEN_WAIT_END:
+        break;
+    case SIMPLEDPP_ERROR_REV_OVER_CAPACITY:
+        break;
+    case SIMPLEDPP_ERROR_REV_NONCTRL_BYTE_WHEN_WAIT_CTRL_BYTE:
+        break;
+
     default:
         break;
     }

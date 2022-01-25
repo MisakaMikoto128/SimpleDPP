@@ -1,5 +1,5 @@
 #include "Buffer.h"
-void buffser_setmemory(pBuffer p,byte *data,int capacity){
+void buffer_setmemory(pBuffer p,byte *data,int capacity){
     p->data = data;
     p->capacity = capacity;
     p->size = 0;
@@ -44,7 +44,7 @@ Return:
     success: pushed data length
     fail: SAMPLE_ERROR
 */
-int buffer_push_data(pBuffer p,byte *data,int len){
+int buffer_push_data(pBuffer p,const byte *data,int len){
     int i;
     for(i=0;i<len;i++){
         if(buffer_push(p,data[i])==OVER_CAPACITY_ERROR){
