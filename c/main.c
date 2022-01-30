@@ -36,5 +36,10 @@ int main(void)
     {
         printf("send error\n");
     }
+
+//test SimpleDPP_send_datas(size_t data_num,const byte *data, unsigned data_len,...)
+    if(SimpleDPP_send_datas(2, "hello", 5,"AA",2) == SIMPLEDPP_SENDFAILED){
+        printf("send error\n");
+    }
     return 0;
 }

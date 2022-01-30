@@ -1,5 +1,6 @@
 #include "SimpleDPP.h"
 
+
 static void SimpleDPP_send_buffer();
 static void SimpleDPPRecvInnerCallback();
 static void SimpleDPPRevErrorInnerCallback(SimpleDPPERROR error_code);
@@ -88,6 +89,66 @@ int SimpleDPP_send(const byte *data, int len)
     SimpleDPP_send_buffer();
     return len;
 }
+
+
+/**
+ * @brief simple dpp send datas,the input datas will be treated as one data.The last parameter should be VAR_ARG_END.
+ * @return success: send data length
+ * fail: SAMPLE_ERROR
+ * @example SimpleDPP_send_datas(3,"data1",len1,"data2",len2,"data3",len3);
+ */
+int SimpleDPP_send_datas(size_t data_num,const byte *data, unsigned data_len,...)
+{
+    va_list args;
+    int tatal_len = 0;
+    int i;
+    //1. empty buffer
+    buffer_clear(&send_buffer);
+    //2. push SHO
+    buffer_push(&send_buffer, SOH);
+    //3. push message body,when encounter SOH,EOT or ESC,using ESC escape it.
+    va_start(args, data_len);
+    while (data_num--)
+    {
+        for (i = 0; i < data_len; i++)
+        {
+            //3. push message body,when encounter SOH,EOT or ESC,using ESC escape it.
+            if (containSimpleDPPCtrolByte(data[i]))
+            {
+                // escaped control byte only 2 bytes
+                if (buffer_push(&send_buffer, ESC) == OVER_CAPACITY_ERROR)
+                {
+                    return SIMPLEDPP_SENDFAILED;
+                }
+                if (buffer_push(&send_buffer, data[i]) == OVER_CAPACITY_ERROR)
+                {
+                    return SIMPLEDPP_SENDFAILED;
+                }
+            }
+            else
+            {
+                if (buffer_push(&send_buffer, data[i]) == OVER_CAPACITY_ERROR)
+                {
+                    return SIMPLEDPP_SENDFAILED;
+                }
+            }
+        }
+        data = va_arg(args, const byte *);
+        data_len = va_arg(args, int);
+        tatal_len += data_len; 
+    }
+    va_end(args);
+    //4. push EOT
+    if (buffer_push(&send_buffer, EOT) == OVER_CAPACITY_ERROR)
+    {
+        return SIMPLEDPP_SENDFAILED;
+    }
+    //5. send message
+    SimpleDPP_send_buffer();
+    return tatal_len;
+}
+
+
 // SimpleDPP receive state machine's states
 void SimpleDPP_parse(byte c)
 {

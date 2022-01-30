@@ -34,8 +34,17 @@ int main(void)
     // The default buffer size is 1024.
     printf("Test SimpleDPP----------->\r\n");
     char *msg = "hello worl@\\00\r\n000d";
+    int len1 = strlen(msg);
     if (SimpleDPP_send(msg, strlen(msg)) == SIMPLEDPP_SENDFAILED)
     {
+        printf("send error\n");
+    }
+
+
+    char *msg2 = "AAAAAAAAAA worl@\\00\r\n000d\r\n";
+    int len2 = strlen(msg2);
+    //test int SimpleDPP_send_datas(const byte *data, ...)
+    if(SimpleDPP_send_datas(msg,len1,msg2,len2) == SIMPLEDPP_SENDFAILED){
         printf("send error\n");
     }
     return 0;

@@ -1,7 +1,9 @@
 #ifndef _SIMPLE_DPP_H_
 #define _SIMPLE_DPP_H_
 #include "Buffer.h"
-
+#include <stdarg.h>
+#include <stddef.h>
+#define VAR_ARG_END ((void *)0)
 // define SimpleDPP receive error code
 // level 0:
 #define SIMPLEDPP_RECEIVE_ERROR -1
@@ -46,6 +48,11 @@ __attribute__((weak)) byte __recv_data[SIMPLEDDP_DEFAULT_BUFFER_SIZE];
 void SimpleDPP_init(int send_capacity, int recv_capacity);
 void SimpleDPP_default_init();
 int SimpleDPP_send(const byte *data, int len);
+int __SimpleDPP_send_datas(const byte *data, ...);
+
+
+// Only works in C99    
+#define SimpleDPP_send_datas(van_arg,...) __SimpleDPP_send_datas(van_arg,##__VA_ARGS__,VAR_ARG_END)
 void SimpleDPP_parse(byte c);
 int getSimpleDPPErrorCnt();
 __unimplemented void SimpleDPPRecvCallback(const byte *data, int len);

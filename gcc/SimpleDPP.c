@@ -1,5 +1,5 @@
 #include "SimpleDPP.h"
-#define size_t unsigned int
+
 static void SimpleDPP_send_buffer();
 static void SimpleDPPRecvInnerCallback();
 static void SimpleDPPRevErrorInnerCallback(SimpleDPPERROR error_code);
@@ -13,7 +13,7 @@ __attribute__((weak)) byte __recv_data[SIMPLEDDP_DEFAULT_BUFFER_SIZE];
 
 // #define SimpleDPP_ESCAPE_CHAR_LEN 2
 // static char SimpleDPP_control_byte_buf[SimpleDPP_ESCAPE_CHAR_LEN] = {0};
-void SimpleDPP_init(int send_capacity,int recv_capacity)
+void SimpleDPP_init(int send_capacity, int recv_capacity)
 {
     buffer_setmemory(&send_buffer, __send_data, send_capacity);
     buffer_setmemory(&recv_buffer, __recv_data, recv_capacity);
@@ -55,6 +55,7 @@ int getSimpleDPPErrorCnt()
 {
     return SimpleDPPErrorCnt;
 }
+
 /*
 Return:
     success: send data length
@@ -91,7 +92,7 @@ int SimpleDPP_send(const byte *data, int len)
         }
     }
     //4. push EOT
-    if(buffer_push(&send_buffer, EOT) == OVER_CAPACITY_ERROR)
+    if (buffer_push(&send_buffer, EOT) == OVER_CAPACITY_ERROR)
     {
         return SIMPLEDPP_SENDFAILED;
     }
@@ -99,6 +100,65 @@ int SimpleDPP_send(const byte *data, int len)
     SimpleDPP_send_buffer();
     return len;
 }
+
+/**
+ * @brief simple dpp send datas,the input datas will be treated as one data.The last parameter should be VAR_ARG_END.
+ * @return success: send data length
+ * fail: SAMPLE_ERROR
+ * @example __SimpleDPP_send_datas("data1",len1,"data2",len2,"data3",len3,...,VAR_ARG_END);
+ */
+int __SimpleDPP_send_datas(const byte *data, ...)
+{
+    va_list args;
+    int len = 0;
+    int tatal_len = 0;
+    int i;
+    //1. empty buffer
+    buffer_clear(&send_buffer);
+    //2. push SHO
+    buffer_push(&send_buffer, SOH);
+    //3. push message body,when encounter SOH,EOT or ESC,using ESC escape it.
+    va_start(args, data);
+    while (data != VAR_ARG_END)
+    {
+        len = va_arg(args, int);
+        tatal_len += len;
+        for (i = 0; i < len; i++)
+        {
+            //3. push message body,when encounter SOH,EOT or ESC,using ESC escape it.
+            if (containSimpleDPPCtrolByte(data[i]))
+            {
+                // escaped control byte only 2 bytes
+                if (buffer_push(&send_buffer, ESC) == OVER_CAPACITY_ERROR)
+                {
+                    return SIMPLEDPP_SENDFAILED;
+                }
+                if (buffer_push(&send_buffer, data[i]) == OVER_CAPACITY_ERROR)
+                {
+                    return SIMPLEDPP_SENDFAILED;
+                }
+            }
+            else
+            {
+                if (buffer_push(&send_buffer, data[i]) == OVER_CAPACITY_ERROR)
+                {
+                    return SIMPLEDPP_SENDFAILED;
+                }
+            }
+        }
+        data = va_arg(args, const byte *);
+    }
+    va_end(args);
+    //4. push EOT
+    if (buffer_push(&send_buffer, EOT) == OVER_CAPACITY_ERROR)
+    {
+        return SIMPLEDPP_SENDFAILED;
+    }
+    //5. send message
+    SimpleDPP_send_buffer();
+    return tatal_len;
+}
+
 // SimpleDPP receive state machine's states
 void SimpleDPP_parse(byte c)
 {
@@ -151,21 +211,18 @@ void SimpleDPP_parse(byte c)
     }
 }
 
-
-
 __attribute__((weak)) void SimpleDPPRecvCallback(const byte *data, int len)
 {
     __unimplemented
 }
 __attribute__((weak)) byte SimpleDPP_putchar(byte c)
 {
-   __unimplemented
-    return c;
+    __unimplemented return c;
 }
 
-__attribute__((weak)) void SimpleDPPRevErrorCallback(SimpleDPPERROR error_code){
-    __unimplemented
-    switch (error_code)
+__attribute__((weak)) void SimpleDPPRevErrorCallback(SimpleDPPERROR error_code)
+{
+    __unimplemented switch (error_code)
     {
     case SIMPLEDPP_ERROR_REV_SOH_WHEN_WAIT_END:
         break;

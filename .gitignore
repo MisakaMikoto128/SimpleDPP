@@ -20,3 +20,7 @@ A.m
 python/test.py
 /qt/build*/
 *.gch
+gcc/SimpleDPP.dev
+gcc/simpledpptest
+gcc/SimpleDPP.layout
+gcc/Makefile.win
