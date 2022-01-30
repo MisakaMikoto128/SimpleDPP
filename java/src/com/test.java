@@ -45,7 +45,11 @@ public class test {
                 } catch (UnsupportedEncodingException e) {
                     e.printStackTrace();
                 }
-                simpleDPP.parse(data);
+                try {
+                    simpleDPP.parse(data);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
             }
         });
 

@@ -43,11 +43,11 @@ int getSimpleDPPErrorCnt()
 {
     return SimpleDPPErrorCnt;
 }
-/*
-Return:
-    success: send data length
-    fail: SAMPLE_ERROR
-*/
+/**
+ * @Return:
+ *   success: send data length
+ * fail: SAMPLE_ERROR
+ */
 int SimpleDPP_send(const byte *data, int len)
 {
     int i;

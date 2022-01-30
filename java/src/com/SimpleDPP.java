@@ -27,8 +27,8 @@ public class SimpleDPP {
     private static final byte EOT = 0x04; // DEC: 4
     private static final byte ESC = 0x18;// DEC: 27
 
-    private List<Byte> sendBuffer   = new ArrayList<Byte>();
-    private List<Byte> revBuffer    = new ArrayList<Byte>();
+    private List<Byte> sendBuffer = new ArrayList<Byte>();
+    private List<Byte> revBuffer = new ArrayList<Byte>();
     //    private ByteBuffer sendBuffer
 //    private ByteBuffer revBuffer;
     private SimpleDPPSendBytesData simpleDPPSendBytesData;
@@ -103,7 +103,7 @@ public class SimpleDPP {
      * @param c byte data you received.
      * @see #parse(byte[] data)
      */
-    public void parse(byte c) {
+    public void parse(byte c) throws Exception {
         switch (SimpleDPPRevState) {
             case SIMPLEDPP_REV_WAIT_START:
                 if (c == SOH) {
@@ -112,16 +112,20 @@ public class SimpleDPP {
                 break;
             case SIMPLEDPP_REV_WAIT_END:
                 switch (c) {
-                    case SOH -> {
+                    case SOH:
                         SimpleDPPRevState = SIMPLEDPP_REV_WAIT_START;
                         SimpleDPPRevErrorInnerCallback(SIMPLEDPP_ERROR_REV_SOH_WHEN_WAIT_END);
-                    }
-                    case EOT -> {
+                        break;
+                    case EOT:
                         SimpleDPPRevState = SIMPLEDPP_REV_WAIT_START;
                         SimpleDPPRecvInnerCallback();
-                    }
-                    case ESC -> SimpleDPPRevState = SIMPLEDPP_REV_WAIT_CTRL_BYTE;
-                    default -> revBuffer.add(c);
+                        break;
+                    case ESC:
+                        SimpleDPPRevState = SIMPLEDPP_REV_WAIT_CTRL_BYTE;
+                        break;
+                    default:
+                        revBuffer.add(c);
+                        break;
                 }
                 break;
             case SIMPLEDPP_REV_WAIT_CTRL_BYTE:
@@ -145,7 +149,7 @@ public class SimpleDPP {
      * @param data bytes array data you received.
      * @see #parse(byte c)
      */
-    public void parse(byte[] data) {
+    public void parse(byte[] data) throws Exception {
         for (byte datum : data) {
             parse(datum);
         }
@@ -172,17 +176,33 @@ public class SimpleDPP {
     }
 
 
-    private void SimpleDPPRecvInnerCallback() {
+    private void SimpleDPPRecvInnerCallback() throws Exception {
         // TODO: Here the revBuffer allocate a new memory and copy all data from
         // revBuffer to new Byte array,need to optimize.
-        simpleDPPReceiveCallback.receiveCallback(ByteListToArray(revBuffer));
+        try {
+            simpleDPPReceiveCallback.receiveCallback(ByteListToArray(revBuffer));
+        } catch (Exception e) {
+
+            e.printStackTrace();
+            throw e;
+        } finally {
+            revBuffer.clear();
+        }
+
         revBuffer.clear();
     }
 
-    private void SimpleDPPRevErrorInnerCallback(int error_code) {
-        SimpleDPPRevErrorCallback.errorCallback(error_code);
-        revBuffer.clear();
-        SimpleDPPErrorCnt++;
+    private void SimpleDPPRevErrorInnerCallback(int error_code) throws Exception {
+        try {
+            SimpleDPPRevErrorCallback.errorCallback(error_code);
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            revBuffer.clear();
+            SimpleDPPErrorCnt++;
+        }
+
+
     }
 
     int getSimpleDPPErrorCnt() {
@@ -201,6 +221,7 @@ public class SimpleDPP {
         public void errorCallback(int errorCode);
     }
 
+    //
     public void setSimpleDPPRevErrorCallback(SimpleDPPRevErrorCallback SimpleDPPRevErrorCallback) {
         this.SimpleDPPRevErrorCallback = SimpleDPPRevErrorCallback;
     }
