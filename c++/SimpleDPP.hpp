@@ -43,8 +43,8 @@ private:
     int SimpleDPPRevState;
     constexpr static int SEND_START = 0;
     constexpr static int SENDING = 1;
-    constexpr static int SEND_END = 2;
 
+    int send_stage; //0:start, 1:sending, 2:end,only used in send_datas()
 private:
     void SimpleDPPRecvInnerCallback()
     {
@@ -114,6 +114,7 @@ public:
     {
         SimpleDPPErrorCnt = 0;
         SimpleDPPRevState = SIMPLEDPP_REV_WAIT_START;
+        send_stage = SEND_START;
     }
 
     ~SimpleDPP() {}
@@ -210,27 +211,48 @@ public:
         {
             return SIMPLEDPP_SENDFAILED;
         }
-        send_datas(SENDING,rest...); // 将会根据语法来递归调用
+        const char *data = (const char *)&first;
+        size_t len = (size_t)second;
+        switch (send_stage)
+        {
+        case SEND_START:
+            sendBuffer.clear();
+            sendBuffer.push_back(SOH);
+            send_stage = SENDING;
+        case SENDING:
+
+            for (int i = 0; i < len; i++)
+            {
+                //3. push message body,when encounter SOH,EOT or ESC,using ESC escape it.
+                if (containSimpleDPPCtrolByte(data[i]))
+                {
+                    // escaped control byte only 2 bytes
+                    sendBuffer.push_back(ESC);
+                    sendBuffer.push_back(data[i]);
+                }
+                else
+                {
+                    sendBuffer.push_back(data[i]);
+                }
+            }
+
+            break;
+        default:
+            break;
+        }
+
+
+        return send_datas(rest...); // 将会根据语法来递归调用
     }
 
 private:
-    template <typename First, typename Second, typename... Rest>
-    size_t send_datas(int send_stage,const First &first, const Second &second, const Rest &...rest)
-    {
-        //if args number is not even, return SIMPLEDPP_SENDFAILED
-        if (sizeof...(rest) % 2 != 0)
-        {
-            return SIMPLEDPP_SENDFAILED;
-        }
-        send_datas(send_stage,rest...); // 将会根据语法来递归调用
-    }
-
-    size_t send_datas(int send_stage)
+    size_t send_datas(void)
     {
         //4. push EOT
         sendBuffer.push_back(EOT);
         //5. send message
         send_buffer();
+        send_stage = SEND_START;
         return sendBuffer.size();
     }
 };

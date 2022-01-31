@@ -41,7 +41,14 @@ int main(void)
     });
 
     // sdp.send("hello",strlen("hello"));
-    sdp.send_datas("hello",strlen("hello"),"world",strlen("world"));
-
+    size_t send_len = sdp.send_datas("hello",strlen("hello"),"world",strlen("world"));
+    if(send_len == 0)
+    {
+        cout << "send error" << endl;
+    }
+    else
+    {
+        cout << "send success" << send_len << endl;
+    }
     return 0;
 }
