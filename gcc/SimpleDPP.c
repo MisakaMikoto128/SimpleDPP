@@ -58,7 +58,7 @@ int getSimpleDPPErrorCnt()
 
 /*
 Return:
-    success: send data length
+    success: The number of bytes actually sent
     fail: SAMPLE_ERROR
 */
 int SimpleDPP_send(const byte *data, int len)
@@ -103,27 +103,23 @@ int SimpleDPP_send(const byte *data, int len)
 
 /**
  * @brief simple dpp send datas,the input datas will be treated as one data.The last parameter should be VAR_ARG_END.
- * @return success: send data length
+ * @return success: The number of bytes actually sent
  * fail: SAMPLE_ERROR
  * @example __SimpleDPP_send_datas("data1",len1,"data2",len2,"data3",len3,...,VAR_ARG_END);
  */
-int __SimpleDPP_send_datas(const byte *data, ...)
+int __SimpleDPP_send_datas(const byte *data,size_t data_len, ...)
 {
     va_list args;
-    int len = 0;
-    int tatal_len = 0;
     int i;
     //1. empty buffer
     buffer_clear(&send_buffer);
     //2. push SHO
     buffer_push(&send_buffer, SOH);
     //3. push message body,when encounter SOH,EOT or ESC,using ESC escape it.
-    va_start(args, data);
-    while (data != VAR_ARG_END)
+    va_start(args, data_len);
+    while (true)
     {
-        len = va_arg(args, int);
-        tatal_len += len;
-        for (i = 0; i < len; i++)
+        for (i = 0; i < data_len; i++)
         {
             //3. push message body,when encounter SOH,EOT or ESC,using ESC escape it.
             if (containSimpleDPPCtrolByte(data[i]))
@@ -147,6 +143,11 @@ int __SimpleDPP_send_datas(const byte *data, ...)
             }
         }
         data = va_arg(args, const byte *);
+        if(data == VAR_ARG_END)
+        {
+            break;
+        }
+        data_len = va_arg(args, size_t);
     }
     va_end(args);
     //4. push EOT
@@ -156,7 +157,7 @@ int __SimpleDPP_send_datas(const byte *data, ...)
     }
     //5. send message
     SimpleDPP_send_buffer();
-    return tatal_len;
+    return buffer_size(&send_buffer);
 }
 
 // SimpleDPP receive state machine's states

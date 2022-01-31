@@ -46,7 +46,7 @@ int getSimpleDPPErrorCnt()
 }
 /**
  * @Return:
- *   success: send data length
+ *   success: The number of bytes actually sent
  * fail: SAMPLE_ERROR
  */
 int SimpleDPP_send(const byte *data, int len)
@@ -87,20 +87,19 @@ int SimpleDPP_send(const byte *data, int len)
 
     //5. send message
     SimpleDPP_send_buffer();
-    return len;
+    return buffer_size(&send_buffer);
 }
 
 
 /**
  * @brief simple dpp send datas,the input datas will be treated as one data.The last parameter should be VAR_ARG_END.
- * @return success: send data length
+ * @return success: The number of bytes actually sent
  * fail: SAMPLE_ERROR
  * @example SimpleDPP_send_datas(3,"data1",len1,"data2",len2,"data3",len3);
  */
-int SimpleDPP_send_datas(size_t data_num,const byte *data, unsigned data_len,...)
+int SimpleDPP_send_datas(size_t data_num,const byte *data, size_t data_len,...)
 {
     va_list args;
-    int tatal_len = 0;
     int i;
     //1. empty buffer
     buffer_clear(&send_buffer);
@@ -108,7 +107,7 @@ int SimpleDPP_send_datas(size_t data_num,const byte *data, unsigned data_len,...
     buffer_push(&send_buffer, SOH);
     //3. push message body,when encounter SOH,EOT or ESC,using ESC escape it.
     va_start(args, data_len);
-    while (data_num--)
+    while (true)
     {
         for (i = 0; i < data_len; i++)
         {
@@ -133,9 +132,12 @@ int SimpleDPP_send_datas(size_t data_num,const byte *data, unsigned data_len,...
                 }
             }
         }
+        if(--data_num == 0)
+        {
+            break;
+        }
         data = va_arg(args, const byte *);
-        data_len = va_arg(args, int);
-        tatal_len += data_len; 
+        data_len = va_arg(args, size_t);
     }
     va_end(args);
     //4. push EOT
@@ -145,7 +147,7 @@ int SimpleDPP_send_datas(size_t data_num,const byte *data, unsigned data_len,...
     }
     //5. send message
     SimpleDPP_send_buffer();
-    return tatal_len;
+    return buffer_size(&send_buffer);
 }
 
 

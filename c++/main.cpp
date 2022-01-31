@@ -40,8 +40,8 @@ int main(void)
         sdp.parse(senddata.data(),senddata.size());
     });
 
-    sdp.send("hello",strlen("hello"));
-
+    // sdp.send("hello",strlen("hello"));
+    sdp.send_datas("hello",strlen("hello"),"world",strlen("world"));
 
     return 0;
 }
