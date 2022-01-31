@@ -203,6 +203,50 @@ public:
     }
 
 public:
+    /**
+     * @brief must be used before send_datas_add() and send_datas_end()
+     */
+    void send_datas_start()
+    {
+        // 1. empty buffer
+        sendBuffer.clear();
+        // 2. push SHO
+        sendBuffer.push_back(SOH);
+    }
+
+    /**
+     * @brief must be used between send_datas_start() and send_datas_add()
+     */
+    void send_datas_add(const byte *data, size_t len)
+    {
+        for (int i = 0; i < len; i++)
+        {
+            //3. push message body,when encounter SOH,EOT or ESC,using ESC escape it.
+            if (containSimpleDPPCtrolByte(data[i]))
+            {
+                // escaped control byte only 2 bytes
+                sendBuffer.push_back(ESC);
+                sendBuffer.push_back(data[i]);
+            }
+            else
+            {
+                sendBuffer.push_back(data[i]);
+            }
+        }
+    }
+
+    /**
+     * @brief must be used after send_datas_start() and send_datas_add()
+     */
+    void send_datas_end()
+    {
+        //4. push EOT
+        sendBuffer.push_back(EOT);
+        //5. send message
+        send_buffer();
+    }
+
+public:
     template <typename First, typename Second, typename... Rest>
     size_t send_datas(const First &first, const Second &second, const Rest &...rest)
     {
@@ -216,42 +260,21 @@ public:
         switch (send_stage)
         {
         case SEND_START:
-            sendBuffer.clear();
-            sendBuffer.push_back(SOH);
+            send_datas_start();
             send_stage = SENDING;
         case SENDING:
-
-            for (int i = 0; i < len; i++)
-            {
-                //3. push message body,when encounter SOH,EOT or ESC,using ESC escape it.
-                if (containSimpleDPPCtrolByte(data[i]))
-                {
-                    // escaped control byte only 2 bytes
-                    sendBuffer.push_back(ESC);
-                    sendBuffer.push_back(data[i]);
-                }
-                else
-                {
-                    sendBuffer.push_back(data[i]);
-                }
-            }
-
+            send_datas_add(data, len);
             break;
         default:
             break;
         }
-
-
         return send_datas(rest...); // 将会根据语法来递归调用
     }
 
 private:
     size_t send_datas(void)
     {
-        //4. push EOT
-        sendBuffer.push_back(EOT);
-        //5. send message
-        send_buffer();
+        send_datas_end();
         send_stage = SEND_START;
         return sendBuffer.size();
     }

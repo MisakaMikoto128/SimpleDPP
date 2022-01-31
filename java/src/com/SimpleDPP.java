@@ -95,6 +95,19 @@ public class SimpleDPP {
 
     /**
      * <p>
+     * must be used before send_datas_add() and send_datas_end()
+     * </p>
+     */
+    public void send_datas_start() {
+        // 1. empty buffer
+        sendBuffer.clear();
+        // 2. push SHO
+        sendBuffer.add(SOH);
+    }
+
+    
+    /**
+     * <p>
      * must be used between send_datas_start() and send_datas_add()
      * </p>
      */
@@ -108,18 +121,6 @@ public class SimpleDPP {
                 sendBuffer.add(datum);
             }
         }
-    }
-
-    /**
-     * <p>
-     * must be used before send_datas_add() and send_datas_end()
-     * </p>
-     */
-    public void send_datas_start() {
-        // 1. empty buffer
-        sendBuffer.clear();
-        // 2. push SHO
-        sendBuffer.add(SOH);
     }
 
     /**
