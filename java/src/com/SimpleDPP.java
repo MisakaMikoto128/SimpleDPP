@@ -1,5 +1,6 @@
 package com;
 
+import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
@@ -29,8 +30,8 @@ public class SimpleDPP {
 
     private List<Byte> sendBuffer = new ArrayList<Byte>();
     private List<Byte> revBuffer = new ArrayList<Byte>();
-    //    private ByteBuffer sendBuffer
-//    private ByteBuffer revBuffer;
+    // private ByteBuffer sendBuffer
+    // private ByteBuffer revBuffer;
     private SimpleDPPSendBytesData simpleDPPSendBytesData;
     private SimpleDPPReceiveCallback simpleDPPReceiveCallback;
     private SimpleDPPRevErrorCallback SimpleDPPRevErrorCallback;
@@ -45,7 +46,6 @@ public class SimpleDPP {
     public SimpleDPP() {
     }
 
-
     /**
      * <p>
      * Simple DPP send msg.
@@ -53,31 +53,14 @@ public class SimpleDPP {
      *
      * @param data byte data you will be sent.
      * @return success: send data bytes length
-     * fail: SIMPLEDPP_SENDFAILED
+     *         fail: SIMPLEDPP_SENDFAILED
      * @see #send(String str_data)
      */
     public int send(byte[] data) {
 
-        // 1. empty buffer
-        sendBuffer.clear();
-        // 2. push SHO
-        sendBuffer.add(SOH);
-        for (byte datum : data) {
-            // 3. push message body,when encounter SOH,EOT or ESC,using ESC escape it.
-            if (containSimpleDPPCtrolByte(datum)) {
-                sendBuffer.add(ESC);
-                sendBuffer.add(datum);
-            } else {
-                sendBuffer.add(datum);
-            }
-        }
-        // 4. push EOT
-        sendBuffer.add(EOT);
-        /*
-         5. send message
-         TODO: Here the sendBuffer allocate a new memory and copy all data from sendBuffer to new Byte array,need to optimize.
-        */
-        simpleDPPSendBytesData.sendBytesData(ByteListToArray(sendBuffer));
+        send_datas_start();
+        send_datas_add(data);
+        send_datas_end();
         return sendBuffer.size();
     }
 
@@ -88,12 +71,134 @@ public class SimpleDPP {
      *
      * @param data string data you will be sent.
      * @return success: send data bytes length
-     * fail: SIMPLEDPP_SENDFAILED
+     *         fail: SIMPLEDPP_SENDFAILED
+     * @see #send(byte[] data)
+     */
+    public int send(Charset charset,String data) {
+        return send(data.getBytes(charset));
+    }
+
+    /**
+     * <p>
+     * Simple DPP send string msg,default charset is UTF-8.
+     * </p>
+     *
+     * @param data string data you will be sent.
+     * @return success: send data bytes length
+     *         fail: SIMPLEDPP_SENDFAILED
      * @see #send(byte[] data)
      */
     public int send(String data) {
         return send(data.getBytes(StandardCharsets.UTF_8));
     }
+
+
+    /**
+     * <p>
+     * must be used between send_datas_start() and send_datas_add()
+     * </p>
+     */
+    public void send_datas_add(byte[] data) {
+        for (byte datum : data) {
+            // 3. push message body,when encounter SOH,EOT or ESC,using ESC escape it.
+            if (containSimpleDPPCtrolByte(datum)) {
+                sendBuffer.add(ESC);
+                sendBuffer.add(datum);
+            } else {
+                sendBuffer.add(datum);
+            }
+        }
+    }
+
+    /**
+     * <p>
+     * must be used before send_datas_add() and send_datas_end()
+     * </p>
+     */
+    public void send_datas_start() {
+        // 1. empty buffer
+        sendBuffer.clear();
+        // 2. push SHO
+        sendBuffer.add(SOH);
+    }
+
+    /**
+     * <p>
+     * must be used after send_datas_start() and send_datas_add()
+     * </p>
+     */
+    public void send_datas_end() {
+        // 4. push EOT
+        sendBuffer.add(EOT);
+        /*
+         * 5. send message
+         * TODO: Here the sendBuffer allocate a new memory and copy all data from
+         * sendBuffer to new Byte array,need to optimize.
+         */
+        simpleDPPSendBytesData.sendBytesData(ByteListToArray(sendBuffer));
+    }
+
+    /**
+     * <p>
+     * Simple DPP send multiple messages.
+     * </p>
+     *
+     * @param datas... byte[].. datas you will be sent.
+     * @return success: send data bytes length
+     *         fail: SIMPLEDPP_SENDFAILED
+     * @examples SimpleDPP.send_datas(bytes1,bytes2,bytes3,...);
+     */
+    public int send_datas(byte[]... datas) {
+        send_datas_start();
+        for (byte[] data : datas) {
+            send_datas_add(data);
+        }
+        send_datas_end();
+        return sendBuffer.size();
+    }
+
+
+    
+    /**
+     * <p>
+     * Simple DPP send multiple messages.
+     * </p>
+     *
+     * @param str_datas... string datas you will be sent.
+     * @return success: send data bytes length
+     *         fail: SIMPLEDPP_SENDFAILED
+     * @examples SimpleDPP.send_datas(StandardCharsets.UTF_8,"Hello","World!",...);
+     */
+    public int send_datas(Charset charset,String... str_datas) {
+        send_datas_start();
+        for (String str : str_datas) {
+            
+            send_datas_add(str.getBytes(charset));
+        }
+        send_datas_end();
+        return sendBuffer.size();
+    }
+
+        /**
+     * <p>
+     * Simple DPP send multiple messages,using default charset is UTF-8.
+     * </p>
+     *
+     * @param str_datas... string datas you will be sent.
+     * @return success: send data bytes length
+     *         fail: SIMPLEDPP_SENDFAILED
+     * @examples SimpleDPP.send_datas("Hello","World!",...);
+     */
+    public int send_datas(String... str_datas) {
+        send_datas_start();
+        for (String str : str_datas) {
+            send_datas_add(str.getBytes(Charset.forName("UTF-8")));
+        }
+        send_datas_end();
+        return sendBuffer.size();
+    }
+
+
 
     /**
      * <p>
@@ -175,7 +280,6 @@ public class SimpleDPP {
         return bytes;
     }
 
-
     private void SimpleDPPRecvInnerCallback() throws Exception {
         // TODO: Here the revBuffer allocate a new memory and copy all data from
         // revBuffer to new Byte array,need to optimize.
@@ -201,7 +305,6 @@ public class SimpleDPP {
             revBuffer.clear();
             SimpleDPPErrorCnt++;
         }
-
 
     }
 
