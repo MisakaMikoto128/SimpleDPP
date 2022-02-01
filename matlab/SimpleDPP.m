@@ -64,10 +64,57 @@ classdef SimpleDPP < handle
                 end
                 obj.send_buffer.push(obj.EOT);
                 obj.send_buffer_fun();
+                flag = obj.send_buffer.length();
             else
                 error("The input datatype is mismatching obj.dtype:",obj.dtype);
-                flag = false;
+                flag = obj.SIMPLEDPP_SENDFAILED;
             end
+        end
+        
+        function send_datas_start(obj)
+            obj.send_buffer.clear();
+            obj.send_buffer.push(obj.SOH);
+        end
+        
+        %返回值为当前缓冲区的字节数
+        function flag = send_datas_add(obj,data)
+            if(isa(data,obj.dtype))
+                    len = length(data);
+                    for i = 1:len
+                        c = data(i);
+                        if(obj.containSimpleDPPCtrolByte(c))
+                            obj.send_buffer.push(obj.ESC);
+                            obj.send_buffer.push(c);
+                        else
+                            obj.send_buffer.push(c);
+                        end
+
+                    end
+                    flag = obj.send_buffer.length();
+            else
+                error("The input datatype is mismatching obj.dtype:",obj.dtype);
+                flag = obj.SIMPLEDPP_SENDFAILED;
+            end
+        end
+        
+        function send_datas_end(obj)
+            obj.send_buffer.push(obj.EOT);
+            obj.send_buffer_fun();
+        end
+        
+        function flag = send_datas(obj,varargin)
+            obj.send_datas_start();
+            for i = 1:nargin-1 
+
+                data = varargin(i);
+                data = cell2mat(data);
+                flag = obj.send_datas_add(data);
+                if flag < 0
+                   return; 
+                end
+            end
+            obj.send_datas_end();
+            flag = obj.send_buffer.length();
         end
         
         function parse(obj,datas)
@@ -81,9 +128,6 @@ classdef SimpleDPP < handle
             end
         end
     end
-    
-    
-    
     
     methods(Hidden)
         function flag = containSimpleDPPCtrolByte(obj,c)

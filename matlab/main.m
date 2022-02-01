@@ -5,6 +5,7 @@ disp(p);
 p;
 s = SimpleDPP(p,hd{1},hd{2});
 s.send(uint8('Hello'));
+s.send_datas(uint8('Hello'),uint8('world!'));
 disp(hd);
 
 
