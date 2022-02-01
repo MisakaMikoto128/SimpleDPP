@@ -46,7 +46,7 @@ int getSimpleDPPErrorCnt()
 /**
  * @Return:
  *   success: The number of bytes actually sent
- * fail: SAMPLE_ERROR
+ * fail: SIMPLEDPP_SENDFAILED
  */
 int SimpleDPP_send(const byte *data, int len)
 {
@@ -91,6 +91,8 @@ int SimpleDPP_send(const byte *data, int len)
 
 /**
  * @brief must be used before send_datas_add() and send_datas_end()
+ * @return success : the number of bytes in the current buffer
+ * fail : SIMPLEDPP_SENDFAILED
  */
 int send_datas_start()
 {
@@ -105,8 +107,10 @@ int send_datas_start()
 }
 
 /**
-     * @brief must be used between send_datas_start() and send_datas_add()
-     */
+ * @brief must be used between send_datas_start() and send_datas_add()
+ * @return success : the number of bytes in the current buffer
+ * fail : SIMPLEDPP_SENDFAILED
+ */
 int send_datas_add(const byte *data, int len)
 {
     for (int i = 0; i < len; i++)
@@ -137,6 +141,8 @@ int send_datas_add(const byte *data, int len)
 
 /**
  * @brief must be used after send_datas_start() and send_datas_add()
+ * @return success : the number of bytes in the current buffer
+ * fail : SIMPLEDPP_SENDFAILED
  */
 int send_datas_end()
 {
@@ -153,7 +159,7 @@ int send_datas_end()
 /**
  * @brief simple dpp send datas,the input datas will be treated as one data.The last parameter should be VAR_ARG_END.
  * @return success: The number of bytes actually sent
- * fail: SAMPLE_ERROR
+ * fail: SIMPLEDPP_SENDFAILED
  * @example SimpleDPP_send_datas(3,"data1",len1,"data2",len2,"data3",len3);
  */
 int SimpleDPP_send_datas(int data_num, const byte *data, int data_len, ...)

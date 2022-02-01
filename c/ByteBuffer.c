@@ -16,7 +16,7 @@ int byte_buffer_capacity(pByteBuffer p){
 /*
 Return:
     success: 0
-    fail: SAMPLE_ERROR
+    fail: OVER_CAPACITY_ERROR
 */
 int byte_buffer_push(pByteBuffer p,byte c){
     if(p->size < p->capacity){
@@ -29,7 +29,7 @@ int byte_buffer_push(pByteBuffer p,byte c){
 /*
 Return:
     success: pushed data length
-    fail: SAMPLE_ERROR
+    fail: OVER_CAPACITY_ERROR
 */
 int byte_buffer_push_str(pByteBuffer p,byte *str){
     int i;
@@ -44,7 +44,7 @@ int byte_buffer_push_str(pByteBuffer p,byte *str){
 /*
 Return:
     success: pushed data length
-    fail: SAMPLE_ERROR
+    fail: OVER_CAPACITY_ERROR
 */
 int byte_buffer_push_data(pByteBuffer p,const byte *data,int len){
     int i;
