@@ -121,17 +121,16 @@ class SimpleDPP(object):
         :charset : only accept encoding = 'xx coding'
         """
         self.send_datas_start()
-        if(len(datas) > 0):
-            if(isinstance(datas[0],str)):
+        for data in datas:
+            if(isinstance(data,str)):
                 if(len(charset) > 0):
-                    for data in datas:
-                        self.send_datas_add(data.encode(charset['encoding']))
+                    self.send_datas_add(data.encode(charset['encoding']))
                 else:
-                    for data in datas:
-                        self.send_datas_add(data.encode('utf-8'))
-            elif(isinstance(datas[0],bytes)):
-                for data in datas:
+                    self.send_datas_add(data.encode('utf-8'))
+            elif(isinstance(data,bytes)):
                     self.send_datas_add(data)
+            else:
+                return self.SIMPLEDPP_SENDFAILED
         self.send_datas_end()
 
     @classmethod
