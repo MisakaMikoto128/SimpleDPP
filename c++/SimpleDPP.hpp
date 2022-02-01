@@ -3,8 +3,7 @@
 
 #include <vector>
 #include <functional>
-#include <iostream>
-using namespace std;
+
 // define SimpleDPP receive error code
 // level 0:
 #define SIMPLEDPP_RECEIVE_ERROR -1
@@ -39,7 +38,7 @@ class SimpleDPP
 private:
     std::vector<byte> sendBuffer;
     std::vector<byte> revBuffer;
-    size_t SimpleDPPErrorCnt;
+    int SimpleDPPErrorCnt;
     int SimpleDPPRevState;
     constexpr static int SEND_START = 0;
     constexpr static int SENDING = 1;
@@ -119,14 +118,14 @@ public:
 
     ~SimpleDPP() {}
 
-    void parse(const byte *data, size_t len)
+    void parse(const byte *data, int len)
     {
         for (int i = 0; i < len; i++)
         {
             parse(data[i]);
         }
     }
-    size_t getSimpleDPPErrorCnt() { return SimpleDPPErrorCnt; }
+    int getSimpleDPPErrorCnt() { return SimpleDPPErrorCnt; }
 
     void parse(byte c)
     {
@@ -173,7 +172,7 @@ public:
         }
     }
 
-    size_t send(const byte *data, size_t len)
+    SimpleDPPERROR send(const byte *data, int len)
     {
         int i;
         //1. empty buffer
@@ -217,7 +216,7 @@ public:
     /**
      * @brief must be used between send_datas_start() and send_datas_add()
      */
-    void send_datas_add(const byte *data, size_t len)
+    void send_datas_add(const byte *data, int len)
     {
         for (int i = 0; i < len; i++)
         {
@@ -248,15 +247,15 @@ public:
 
 public:
     template <typename First, typename Second, typename... Rest>
-    size_t send_datas(const First &first, const Second &second, const Rest &...rest)
+    SimpleDPPERROR send_datas(const First &first, const Second &second, const Rest &...rest)
     {
         //if args number is not even, return SIMPLEDPP_SENDFAILED
         if (sizeof...(rest) % 2 != 0)
         {
             return SIMPLEDPP_SENDFAILED;
         }
-        const char *data = (const char *)&first;
-        size_t len = (size_t)second;
+        const byte *data = (const char *)&first;
+        int len = (int)second;
         switch (send_stage)
         {
         case SEND_START:
@@ -272,7 +271,7 @@ public:
     }
 
 private:
-    size_t send_datas(void)
+    SimpleDPPERROR send_datas(void)
     {
         send_datas_end();
         send_stage = SEND_START;

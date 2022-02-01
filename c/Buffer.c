@@ -4,9 +4,11 @@ void buffer_setmemory(pBuffer p,byte *data,int capacity){
     p->capacity = capacity;
     p->size = 0;
 }
+
 int buffer_size(pBuffer p){
     return p->size;
 }
+
 int buffer_capacity(pBuffer p){
     return p->capacity;
 }

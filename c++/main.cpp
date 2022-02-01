@@ -6,7 +6,7 @@
 #include "SimpleDPP.hpp"
 using namespace std;
 
-void fun(const char *c ,size_t len){
+void fun(const char *c ,int len){
 
 
 }
@@ -41,7 +41,7 @@ int main(void)
     });
 
     // sdp.send("hello",strlen("hello"));
-    size_t send_len = sdp.send_datas("hello",strlen("hello"),"world",strlen("world"));
+    int send_len = sdp.send_datas("hello",strlen("hello"),"world",strlen("world"));
     if(send_len == 0)
     {
         cout << "send error" << endl;

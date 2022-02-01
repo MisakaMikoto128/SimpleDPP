@@ -9,7 +9,7 @@ __implemented void SimpleDPPRecvCallback(const byte *data, int len)
 {
     printf("SimpleDPPRecvCallback------------------> \r\n");
     // print data
-    size_t i = 0;
+    int i = 0;
     for (i; i < len; i++)
     {
         putchar(data[i]);
@@ -37,7 +37,7 @@ int main(void)
         printf("send error\n");
     }
 
-//test SimpleDPP_send_datas(size_t data_num,const byte *data, unsigned data_len,...)
+//test SimpleDPP_send_datas(int data_num,const byte *data, unsigned data_len,...)
     if(SimpleDPP_send_datas(2, "hello", 5,"AA",2) == SIMPLEDPP_SENDFAILED){
         printf("send error\n");
     }

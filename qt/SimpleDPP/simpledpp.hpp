@@ -39,7 +39,7 @@ class SimpleDPP : public QObject
 private:
     QByteArray sendBuffer;
     QByteArray revBuffer;
-    size_t SimpleDPPErrorCnt;
+    int SimpleDPPErrorCnt;
     int SimpleDPPRevState;
 
 private:
@@ -70,9 +70,9 @@ public:
             parse(data[i]);
         }
     }
-    size_t getSimpleDPPErrorCnt(){return SimpleDPPErrorCnt;}
+    int getSimpleDPPErrorCnt(){return SimpleDPPErrorCnt;}
 
-    size_t send(const byte *data, int len){
+    int send(const byte *data, int len){
         int i;
         //1. empty buffer
         sendBuffer.clear();

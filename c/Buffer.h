@@ -4,8 +4,14 @@
 extern "C" {
 #endif
 #include <stdbool.h>
+#include <stddef.h>
 #define OVER_CAPACITY_ERROR -1
 #define byte unsigned char
+
+/**
+ * @type type declaration
+ * size,length,count -> int
+ */
 typedef struct _Buffer {
     byte *data;
     int size;

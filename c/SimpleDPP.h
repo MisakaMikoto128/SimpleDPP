@@ -9,6 +9,14 @@
 #define byte unsigned char
 #define CAST_CHAR_PTR_TO_BYTE_PTR(ptr) (byte *)(ptr)
 
+typedef int SimpleDPPERROR;
+
+/**
+ * @type type declaration
+ * size,length,count -> int
+ */
+
+
 // define SimpleDPP receive error code
 // level 0:
 #define SIMPLEDPP_RECEIVE_ERROR -1
@@ -27,7 +35,7 @@
 #define SIMPLEDPP_REV_WAIT_END 1
 #define SIMPLEDPP_REV_WAIT_CTRL_BYTE 2
 
-typedef int SimpleDPPERROR;
+
 // SimpleDPP frame control byte (The frame delimiter)
 #define SOH 0x01 //DEC: 1
 #define EOT 0x04 //DEC: 4
@@ -41,7 +49,7 @@ typedef int SimpleDPPERROR;
 // Externally provided methods
 void SimpleDPP_init(byte *send_data, int send_capacity, byte *recv_data, int recv_capacity);
 int SimpleDPP_send(const byte *data, int len);
-int SimpleDPP_send_datas(size_t data_num,const byte *data, size_t data_len,...);
+int SimpleDPP_send_datas(int data_num,const byte *data, int data_len,...);
 
 void SimpleDPP_parse(byte c);
 int getSimpleDPPErrorCnt();

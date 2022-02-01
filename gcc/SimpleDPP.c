@@ -107,7 +107,7 @@ int SimpleDPP_send(const byte *data, int len)
  * fail: SAMPLE_ERROR
  * @example __SimpleDPP_send_datas("data1",len1,"data2",len2,"data3",len3,...,VAR_ARG_END);
  */
-int __SimpleDPP_send_datas(const byte *data,size_t data_len, ...)
+int __SimpleDPP_send_datas(const byte *data,int data_len, ...)
 {
     va_list args;
     int i;
@@ -147,7 +147,7 @@ int __SimpleDPP_send_datas(const byte *data,size_t data_len, ...)
         {
             break;
         }
-        data_len = va_arg(args, size_t);
+        data_len = va_arg(args, int);
     }
     va_end(args);
     //4. push EOT

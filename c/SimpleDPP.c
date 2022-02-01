@@ -1,6 +1,5 @@
 #include "SimpleDPP.h"
 
-
 static void SimpleDPP_send_buffer();
 static void SimpleDPPRecvInnerCallback();
 static void SimpleDPPRevErrorInnerCallback(SimpleDPPERROR error_code);
@@ -80,7 +79,7 @@ int SimpleDPP_send(const byte *data, int len)
         }
     }
     //4. push EOT
-    if(buffer_push(&send_buffer, EOT) == OVER_CAPACITY_ERROR)
+    if (buffer_push(&send_buffer, EOT) == OVER_CAPACITY_ERROR)
     {
         return SIMPLEDPP_SENDFAILED;
     }
@@ -90,6 +89,66 @@ int SimpleDPP_send(const byte *data, int len)
     return buffer_size(&send_buffer);
 }
 
+/**
+ * @brief must be used before send_datas_add() and send_datas_end()
+ */
+int send_datas_start()
+{
+    //1. empty buffer
+    buffer_clear(&send_buffer);
+    //2. push SHO
+    if (buffer_push(&send_buffer, SOH) == OVER_CAPACITY_ERROR)
+    {
+        return SIMPLEDPP_SENDFAILED;
+    }
+    return buffer_size(&send_buffer);
+}
+
+/**
+     * @brief must be used between send_datas_start() and send_datas_add()
+     */
+int send_datas_add(const byte *data, int len)
+{
+    for (int i = 0; i < len; i++)
+    {
+        //3. push message body,when encounter SOH,EOT or ESC,using ESC escape it.
+        if (containSimpleDPPCtrolByte(data[i]))
+        {
+            // escaped control byte only 2 bytes
+            if (buffer_push(&send_buffer, ESC) == OVER_CAPACITY_ERROR)
+            {
+                return SIMPLEDPP_SENDFAILED;
+            }
+            if (buffer_push(&send_buffer, data[i]) == OVER_CAPACITY_ERROR)
+            {
+                return SIMPLEDPP_SENDFAILED;
+            }
+        }
+        else
+        {
+            if (buffer_push(&send_buffer, data[i]) == OVER_CAPACITY_ERROR)
+            {
+                return SIMPLEDPP_SENDFAILED;
+            }
+        }
+    }
+    return buffer_size(&send_buffer);
+}
+
+/**
+ * @brief must be used after send_datas_start() and send_datas_add()
+ */
+int send_datas_end()
+{
+    //4. push EOT
+    if (buffer_push(&send_buffer, EOT) == OVER_CAPACITY_ERROR)
+    {
+        return SIMPLEDPP_SENDFAILED;
+    }
+    //5. send message
+    SimpleDPP_send_buffer();
+    return buffer_size(&send_buffer);
+}
 
 /**
  * @brief simple dpp send datas,the input datas will be treated as one data.The last parameter should be VAR_ARG_END.
@@ -97,7 +156,7 @@ int SimpleDPP_send(const byte *data, int len)
  * fail: SAMPLE_ERROR
  * @example SimpleDPP_send_datas(3,"data1",len1,"data2",len2,"data3",len3);
  */
-int SimpleDPP_send_datas(size_t data_num,const byte *data, size_t data_len,...)
+int SimpleDPP_send_datas(int data_num, const byte *data, int data_len, ...)
 {
     va_list args;
     int i;
@@ -132,12 +191,12 @@ int SimpleDPP_send_datas(size_t data_num,const byte *data, size_t data_len,...)
                 }
             }
         }
-        if(--data_num == 0)
+        if (--data_num == 0)
         {
             break;
         }
         data = va_arg(args, const byte *);
-        data_len = va_arg(args, size_t);
+        data_len = va_arg(args, int);
     }
     va_end(args);
     //4. push EOT
@@ -149,7 +208,6 @@ int SimpleDPP_send_datas(size_t data_num,const byte *data, size_t data_len,...)
     SimpleDPP_send_buffer();
     return buffer_size(&send_buffer);
 }
-
 
 // SimpleDPP receive state machine's states
 void SimpleDPP_parse(byte c)
@@ -163,25 +221,6 @@ void SimpleDPP_parse(byte c)
         }
         break;
     case SIMPLEDPP_REV_WAIT_END:
-        // {
-        //     // deprecate
-        // if(c == EOT){
-        //     SimpleDPPRevState = SIMPLEDPP_REV_WAIT_START;
-        //     SimpleDPPRecvInnerCallback();
-        // }
-        // else if(c == ESC){
-        //     SimpleDPPRevState = SIMPLEDPP_REV_WAIT_CTRL_BYTE;
-        // }else if(c == SOH){
-        //     SimpleDPPRevState = SIMPLEDPP_REV_WAIT_START;
-        //     SimpleDPPRevErrorInnerCallback();
-        // }
-        // else{
-        //     if(buffer_push(&recv_buffer, c) == OVER_CAPACITY_ERROR){
-        //         SimpleDPPRevErrorInnerCallback();
-        //     }
-        // }
-        // }
-
         switch (c)
         {
         case SOH:

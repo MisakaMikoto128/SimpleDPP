@@ -9,7 +9,7 @@ __implemented void SimpleDPPRecvCallback(const byte *data, int len)
 {
     printf("SimpleDPPRecvCallback------------------> \r\n");
     // print data
-    size_t i = 0;
+    int i = 0;
     for (i; i < len; i++)
     {
         putchar(data[i]);
