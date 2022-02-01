@@ -15,5 +15,8 @@ def SimpleDPPSendBytesData(data: bytes):
 
 if __name__ == "__main__":
     sdp.setCallback(SimpleDPPReceiveCallback,SimpleDPPRevErrorCallback,SimpleDPPSendBytesData)
-    sdp.send("Hello")
-    sdp.send_datas("Hello","World",encoding="utf-8")
+    ret = sdp.send("Hello")
+    ret = sdp.send(b"Hello")
+    ret = sdp.send_datas("Hello","World",encoding="utf-8")
+    ret = sdp.send_datas("Hello","World")   #using default encoding="utf-8"
+    ret = sdp.send_datas("Hello",b"World",encoding="utf-8") #str and bytes type mixing parameters

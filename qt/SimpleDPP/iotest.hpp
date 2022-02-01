@@ -4,10 +4,12 @@
 #include <QObject>
 #include "simpledpp.hpp"
 #include <iostream>
+#include <cstring>
 using namespace std;
 class iotest : public QObject
 {
     Q_OBJECT
+    //1. Init Simple DPP
     SimpleDPP sdp;
 public:
     explicit iotest(QObject *parent)
@@ -17,7 +19,24 @@ public:
         connect(&sdp,&SimpleDPP::RecvCallback,this,&iotest::SimpleDPPRecvCallback);
         connect(&sdp,&SimpleDPP::RevErrorCallback,this,&iotest::SimpleDPPRevErrorCallback);
 
-        sdp.send("aa",sizeof("aa")-1);
+
+        //2. send and parse one msg,msg cnn be type of char * or byte *
+        char *msg = "hello worl@\\00\r\n000d";
+        if (sdp.send(msg, strlen(msg)) == SIMPLEDPP_SENDFAILED)
+        {
+            printf("send error\n");
+        }
+        
+        //3. send and parse multiple msg,msg cnn be type of char * or byte *
+        int send_len = sdp.send_datas("hello",strlen("hello"),"world",strlen("world"));
+        if(send_len == 0)
+        {
+            cout << "send error" << endl;
+        }
+        else
+        {
+            cout << "send success" << send_len << endl;
+        }
     }
 
 

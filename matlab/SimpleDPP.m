@@ -117,6 +117,8 @@ classdef SimpleDPP < handle
             flag = obj.send_buffer.length();
         end
         
+        
+        
         function parse(obj,datas)
             if(isa(datas,obj.dtype))
                 len = length(datas);

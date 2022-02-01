@@ -6,12 +6,9 @@
 #include "SimpleDPP.hpp"
 using namespace std;
 
-void fun(const char *c ,int len){
-
-
-}
 int main(void)
 {
+    //1. Init Simple DPP
     SimpleDPP sdp;
     sdp.bindRecvCallback([](const std::vector<byte> &revdata)
     {
@@ -40,7 +37,15 @@ int main(void)
         sdp.parse(senddata.data(),senddata.size());
     });
 
-    // sdp.send("hello",strlen("hello"));
+
+    //2. send and parse one msg,msg cnn be type of char * or byte *
+    char *msg = "hello worl@\\00\r\n000d";
+    if (sdp.send(msg, strlen(msg)) == SIMPLEDPP_SENDFAILED)
+    {
+        printf("send error\n");
+    }
+    
+    //3. send and parse multiple msg,msg cnn be type of char * or byte *
     int send_len = sdp.send_datas("hello",strlen("hello"),"world",strlen("world"));
     if(send_len == 0)
     {

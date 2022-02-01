@@ -29,23 +29,26 @@ __implemented void SimpleDPPRevErrorCallback(SimpleDPPERROR error_code){
 int main(void)
 {
 
+    //1. Init Simple DPP data buffer
+    //1.1 using custom buffers, the default buffer will not compile
     SimpleDPP_init(BUFFER_SIZE,BUFFER_SIZE);
-    // or you can use SimpleDPP_default_init(),and "__send_data" and "__recv_data" don't need to be defined.
-    // The default buffer size is 1024.
-    printf("Test SimpleDPP----------->\r\n");
+    //1.2 or you can use SimpleDPP_default_init(),and "__send_data" and "__recv_data" don't need to be defined.
+    //default buffer size is 1024.
+    SimpleDPP_default_init();
+
+
+    //2. send and parse one msg,msg cnn be type of char * or byte *
     char *msg = "hello worl@\\00\r\n000d";
-    int len1 = strlen(msg);
     if (SimpleDPP_send(msg, strlen(msg)) == SIMPLEDPP_SENDFAILED)
     {
         printf("send error\n");
     }
 
-
-    char *msg2 = "AAAAAAAAAA worl@\\00\r\n000d\r\n";
-    int len2 = strlen(msg2);
-    //test int SimpleDPP_send_datas(const byte *data, ...)
-    if(SimpleDPP_send_datas(msg,len1,msg2,len2) == SIMPLEDPP_SENDFAILED){
+    //3. send and parse multiple msg,msg cnn be type of char * or byte *
+    if(SimpleDPP_send_datas(2, "hello", 5,"AA",2) == SIMPLEDPP_SENDFAILED)
+    {
         printf("send error\n");
     }
+
     return 0;
 }
