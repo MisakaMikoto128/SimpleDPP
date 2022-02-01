@@ -36,29 +36,6 @@ class SimpleDPP(object):
         self._simpleDPPSendBytesData = simpleDPPSendBytesData
         self._simpleDPPReceiveCallback = simpleDPPReceiveCallback
 
-    '''
-    @brief: Simple DPP send msg.
-    @param data: bytes data you will be sent.
-    @return success: send data bytes length
-            fail: SIMPLEDPP_SENDFAILED
-    '''
-    @singledispatchmethod
-    def send(self, data:bytes)->int:
-        sendBuffer = []
-        sendBuffer.append(self.SOH)
-        for datum in data:
-            if self.containSimpleDPPCtrolByte(datum):
-                sendBuffer.append(self.ESC)
-                sendBuffer.append(datum)
-            else:
-                sendBuffer.append(datum)
-        sendBuffer.append(self.EOT)
-        self._simpleDPPSendBytesData(sendBuffer)
-        return sendBuffer.__len__()
-
-    @send.register
-    def _(self,data:str,encoding='utf-8'):
-        return self.send(data.encode(encoding))
 
     '''
     @brief: Simple DPP receive msg.SimpleDPP receive state machine's states
@@ -97,6 +74,66 @@ class SimpleDPP(object):
         for datum in c:
             self.parse(datum)
 
+    '''
+    @brief: Simple DPP send msg.
+    @param data: bytes data you will be sent.
+    @return success: send data bytes length
+            fail: SIMPLEDPP_SENDFAILED
+    '''
+    @singledispatchmethod
+    def send(self, data:bytes)->int:
+        self.sendBuffer.clear()
+        self.sendBuffer.append(self.SOH)
+        for datum in data:
+            if self.containSimpleDPPCtrolByte(datum):
+                self.sendBuffer.append(self.ESC)
+                self.sendBuffer.append(datum)
+            else:
+                self.sendBuffer.append(datum)
+        self.sendBuffer.append(self.EOT)
+        self._simpleDPPSendBytesData(self.sendBuffer)
+        return self.sendBuffer.__len__()
+
+    @send.register
+    def _(self,data:str,encoding='utf-8'):
+        return self.send(data.encode(encoding))
+
+
+    def send_datas_start(self):
+        self.sendBuffer.clear()
+        self.sendBuffer.append(self.SOH)
+
+    def send_datas_add(self,data:bytes):
+        for datum in data:
+            if self.containSimpleDPPCtrolByte(datum):
+                self.sendBuffer.append(self.ESC)
+                self.sendBuffer.append(datum)
+            else:
+                self.sendBuffer.append(datum)
+
+    def send_datas_end(self):
+        self.sendBuffer.append(self.EOT)
+        self._simpleDPPSendBytesData(self.sendBuffer)
+
+    def send_datas(self,*datas,**charset):
+        """
+        :type datas: list bytes
+        :charset : only accept encoding = 'xx coding'
+        """
+        self.send_datas_start()
+        if(len(datas) > 0):
+            if(isinstance(datas[0],str)):
+                if(len(charset) > 0):
+                    for data in datas:
+                        self.send_datas_add(data.encode(charset['encoding']))
+                else:
+                    for data in datas:
+                        self.send_datas_add(data.encode('utf-8'))
+            elif(isinstance(datas[0],bytes)):
+                for data in datas:
+                    self.send_datas_add(data)
+        self.send_datas_end()
+
     @classmethod
     def containSimpleDPPCtrolByte(cls, c):
         return (c == cls.SOH or c == cls.EOT or c == cls.ESC)
@@ -123,7 +160,7 @@ class SimpleDPP(object):
     def SimpleDPPRecvInnerCallback(self):
         if self._simpleDPPReceiveCallback != None:
             self._simpleDPPReceiveCallback(self.revBuffer)
-            self.revBuffer = []
+            self.revBuffer.clear()
 
     def SimpleDPPRevErrorInnerCallback(self, errorCode: int):
         self._SimpleDPPErrorCnt += 1
