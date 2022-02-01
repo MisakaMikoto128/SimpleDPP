@@ -21,7 +21,7 @@ public:
 
 
         //2. send and parse one msg,msg cnn be type of char * or byte *
-        char *msg = "hello worl@\\00\r\n000d";
+        const char *msg = "hello worl@\\00\r\n000d";
         if (sdp.send(msg, strlen(msg)) == SIMPLEDPP_SENDFAILED)
         {
             printf("send error\n");

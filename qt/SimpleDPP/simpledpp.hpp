@@ -3,6 +3,12 @@
 
 #include <QObject>
 
+typedef int SimpleDPPERROR;
+
+//cast char * to byte *
+#define byte char
+#define CAST_CHAR_PTR_TO_BYTE_PTR(ptr) (byte *)(ptr)
+
 // define SimpleDPP receive error code
 // level 0:
 #define SIMPLEDPP_RECEIVE_ERROR -1
@@ -16,16 +22,11 @@
 #define SIMPLEDPP_ERROR_REV_NONCTRL_BYTE_WHEN_WAIT_CTRL_BYTE -22 //USING
 #define SIMPLEDPP_CRC_CHECK_ERROR -23
 
-//cast char * to byte *
-#define byte char
-#define CAST_CHAR_PTR_TO_BYTE_PTR(ptr) (byte *)(ptr)
-
 // SimpleDPP receive state machine's states
 #define SIMPLEDPP_REV_WAIT_START 0
 #define SIMPLEDPP_REV_WAIT_END 1
 #define SIMPLEDPP_REV_WAIT_CTRL_BYTE 2
 
-typedef int SimpleDPPERROR;
 // SimpleDPP frame control byte (The frame delimiter)
 #define SOH 0x01 //DEC: 1
 #define EOT 0x04 //DEC: 4
@@ -41,10 +42,10 @@ private:
     QByteArray revBuffer;
     int SimpleDPPErrorCnt;
     int SimpleDPPRevState;
-    constexpr static int SEND_START = 0;
-    constexpr static int SENDING = 1;
 
     int send_stage; //0:start, 1:sending,only used in send_datas()
+    constexpr static int SEND_START = 0;
+    constexpr static int SENDING = 1;
 private:
     void SimpleDPPRecvInnerCallback(){
         emit RecvCallback(revBuffer);
