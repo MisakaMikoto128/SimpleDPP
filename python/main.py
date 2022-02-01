@@ -16,3 +16,4 @@ def SimpleDPPSendBytesData(data: bytes):
 if __name__ == "__main__":
     sdp.setCallback(SimpleDPPReceiveCallback,SimpleDPPRevErrorCallback,SimpleDPPSendBytesData)
     sdp.send("Hello")
+    sddp.send("Hello")

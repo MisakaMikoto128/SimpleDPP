@@ -9,7 +9,7 @@ public class SimpleDPP {
     // define SimpleDPP receive error code
     // level 0:
     private static final int SIMPLEDPP_RECEIVE_ERROR = -1;
-    private static final int SIMPLEDPP_SENDFAILED = -2;
+    private static final int SIMPLEDPP_SENDFAILED = -2;//USING,SEND ONLY USING THIS ERROR CODE
     private static final int SIMPLEDPP_NORMAL = 0;
     // level 1:
     private static final int SIMPLEDPP_ERROR_REV_OVER_CAPACITY = -11;
@@ -17,7 +17,7 @@ public class SimpleDPP {
     // level 2:
     public static final int SIMPLEDPP_ERROR_REV_SOH_WHEN_WAIT_END = -21;
     public static final int SIMPLEDPP_ERROR_REV_NONCTRL_BYTE_WHEN_WAIT_CTRL_BYTE = -22;
-
+    public static final int SIMPLEDPP_CRC_CHECK_ERROR = -23;
     // SimpleDPP receive state machine's states
     private static final int SIMPLEDPP_REV_WAIT_START = 0;
     private static final int SIMPLEDPP_REV_WAIT_END = 1;

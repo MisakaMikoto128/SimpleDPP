@@ -6,7 +6,7 @@ class SimpleDPP(object):
     # define SimpleDPP receive error code
     # level 0:
     SIMPLEDPP_RECEIVE_ERROR = -1
-    SIMPLEDPP_SENDFAILED = -2
+    SIMPLEDPP_SENDFAILED = -2 #USING,SEND ONLY USING THIS ERROR CODE
     SIMPLEDPP_NORMAL = 0
    # level 1:
     SIMPLEDPP_ERROR_REV_OVER_CAPACITY = -11
@@ -14,7 +14,7 @@ class SimpleDPP(object):
    # level 2:
     SIMPLEDPP_ERROR_REV_SOH_WHEN_WAIT_END = -21
     SIMPLEDPP_ERROR_REV_NONCTRL_BYTE_WHEN_WAIT_CTRL_BYTE = -22
-
+    SIMPLEDPP_CRC_CHECK_ERROR = -23
    # SimpleDPP receive state machine's states
     SIMPLEDPP_REV_WAIT_START = 0
     SIMPLEDPP_REV_WAIT_END = 1
