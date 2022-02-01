@@ -1,15 +1,15 @@
-#include "Buffer.h"
-void buffer_setmemory(pBuffer p,byte *data,int capacity){
+#include "ByteBuffer.h"
+void byte_buffer_setmemory(pByteBuffer p,byte *data,int capacity){
     p->data = data;
     p->capacity = capacity;
     p->size = 0;
 }
 
-int buffer_size(pBuffer p){
+int byte_buffer_size(pByteBuffer p){
     return p->size;
 }
 
-int buffer_capacity(pBuffer p){
+int byte_buffer_capacity(pByteBuffer p){
     return p->capacity;
 }
 
@@ -18,7 +18,7 @@ Return:
     success: 0
     fail: SAMPLE_ERROR
 */
-int buffer_push(pBuffer p,byte c){
+int byte_buffer_push(pByteBuffer p,byte c){
     if(p->size < p->capacity){
         p->data[p->size++] = c;
         return 0;
@@ -31,10 +31,10 @@ Return:
     success: pushed data length
     fail: SAMPLE_ERROR
 */
-int buffer_push_str(pBuffer p,byte *str){
+int byte_buffer_push_str(pByteBuffer p,byte *str){
     int i;
     for(i=0;str[i]!='\0';i++){
-        if(buffer_push(p,str[i])==OVER_CAPACITY_ERROR){
+        if(byte_buffer_push(p,str[i])==OVER_CAPACITY_ERROR){
             return OVER_CAPACITY_ERROR;
         }
     }
@@ -46,16 +46,16 @@ Return:
     success: pushed data length
     fail: SAMPLE_ERROR
 */
-int buffer_push_data(pBuffer p,const byte *data,int len){
+int byte_buffer_push_data(pByteBuffer p,const byte *data,int len){
     int i;
     for(i=0;i<len;i++){
-        if(buffer_push(p,data[i])==OVER_CAPACITY_ERROR){
+        if(byte_buffer_push(p,data[i])==OVER_CAPACITY_ERROR){
             return OVER_CAPACITY_ERROR;
         }
     }
     return i;
 }
 
-void buffer_clear(pBuffer p){
+void byte_buffer_clear(pByteBuffer p){
     p->size = 0;
 }

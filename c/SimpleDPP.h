@@ -1,6 +1,6 @@
 #ifndef _SIMPLE_DPP_H_
 #define _SIMPLE_DPP_H_
-#include "Buffer.h"
+#include "ByteBuffer.h"
 #include <stdarg.h>
 #include <stddef.h>
 

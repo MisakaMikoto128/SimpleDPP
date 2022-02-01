@@ -43,7 +43,7 @@ private:
     constexpr static int SEND_START = 0;
     constexpr static int SENDING = 1;
 
-    int send_stage; //0:start, 1:sending, 2:end,only used in send_datas()
+    int send_stage; //0:start, 1:sending,only used in send_datas()
 private:
     void SimpleDPPRecvInnerCallback()
     {
@@ -172,7 +172,7 @@ public:
         }
     }
 
-    SimpleDPPERROR send(const byte *data, int len)
+    int send(const byte *data, int len)
     {
         int i;
         //1. empty buffer
@@ -247,7 +247,7 @@ public:
 
 public:
     template <typename First, typename Second, typename... Rest>
-    SimpleDPPERROR send_datas(const First &first, const Second &second, const Rest &...rest)
+    int send_datas(const First &first, const Second &second, const Rest &...rest)
     {
         //if args number is not even, return SIMPLEDPP_SENDFAILED
         if (sizeof...(rest) % 2 != 0)
@@ -271,7 +271,7 @@ public:
     }
 
 private:
-    SimpleDPPERROR send_datas(void)
+    int send_datas(void)
     {
         send_datas_end();
         send_stage = SEND_START;

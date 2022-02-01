@@ -3,16 +3,16 @@
 static void SimpleDPP_send_buffer();
 static void SimpleDPPRecvInnerCallback();
 static void SimpleDPPRevErrorInnerCallback(SimpleDPPERROR error_code);
-static Buffer send_buffer;
-static Buffer recv_buffer;
+static ByteBuffer send_buffer;
+static ByteBuffer recv_buffer;
 static int SimpleDPPErrorCnt;
 static int SimpleDPPRevState;
 // #define SimpleDPP_ESCAPE_CHAR_LEN 2
 // static char SimpleDPP_control_byte_buf[SimpleDPP_ESCAPE_CHAR_LEN] = {0};
 void SimpleDPP_init(byte *send_data, int send_capacity, byte *recv_data, int recv_capacity)
 {
-    buffer_setmemory(&send_buffer, send_data, send_capacity);
-    buffer_setmemory(&recv_buffer, recv_data, recv_capacity);
+    byte_buffer_setmemory(&send_buffer, send_data, send_capacity);
+    byte_buffer_setmemory(&recv_buffer, recv_data, recv_capacity);
     SimpleDPPErrorCnt = 0;
     SimpleDPPRevState = SIMPLEDPP_REV_WAIT_START;
 }
@@ -29,13 +29,13 @@ static void SimpleDPP_send_buffer()
 static void SimpleDPPRecvInnerCallback()
 {
     SimpleDPPRecvCallback(recv_buffer.data, recv_buffer.size);
-    buffer_clear(&recv_buffer);
+    byte_buffer_clear(&recv_buffer);
 }
 
 static void SimpleDPPRevErrorInnerCallback(SimpleDPPERROR error_code)
 {
     SimpleDPPRevErrorCallback(error_code);
-    buffer_clear(&recv_buffer);
+    byte_buffer_clear(&recv_buffer);
     SimpleDPPErrorCnt++;
 }
 
@@ -52,41 +52,41 @@ int SimpleDPP_send(const byte *data, int len)
 {
     int i;
     //1. empty buffer
-    buffer_clear(&send_buffer);
+    byte_buffer_clear(&send_buffer);
     //2. push SHO
-    buffer_push(&send_buffer, SOH);
+    byte_buffer_push(&send_buffer, SOH);
     for (i = 0; i < len; i++)
     {
         //3. push message body,when encounter SOH,EOT or ESC,using ESC escape it.
         if (containSimpleDPPCtrolByte(data[i]))
         {
             // escaped control byte only 2 bytes
-            if (buffer_push(&send_buffer, ESC) == OVER_CAPACITY_ERROR)
+            if (byte_buffer_push(&send_buffer, ESC) == OVER_CAPACITY_ERROR)
             {
                 return SIMPLEDPP_SENDFAILED;
             }
-            if (buffer_push(&send_buffer, data[i]) == OVER_CAPACITY_ERROR)
+            if (byte_buffer_push(&send_buffer, data[i]) == OVER_CAPACITY_ERROR)
             {
                 return SIMPLEDPP_SENDFAILED;
             }
         }
         else
         {
-            if (buffer_push(&send_buffer, data[i]) == OVER_CAPACITY_ERROR)
+            if (byte_buffer_push(&send_buffer, data[i]) == OVER_CAPACITY_ERROR)
             {
                 return SIMPLEDPP_SENDFAILED;
             }
         }
     }
     //4. push EOT
-    if (buffer_push(&send_buffer, EOT) == OVER_CAPACITY_ERROR)
+    if (byte_buffer_push(&send_buffer, EOT) == OVER_CAPACITY_ERROR)
     {
         return SIMPLEDPP_SENDFAILED;
     }
 
     //5. send message
     SimpleDPP_send_buffer();
-    return buffer_size(&send_buffer);
+    return byte_buffer_size(&send_buffer);
 }
 
 /**
@@ -95,13 +95,13 @@ int SimpleDPP_send(const byte *data, int len)
 int send_datas_start()
 {
     //1. empty buffer
-    buffer_clear(&send_buffer);
+    byte_buffer_clear(&send_buffer);
     //2. push SHO
-    if (buffer_push(&send_buffer, SOH) == OVER_CAPACITY_ERROR)
+    if (byte_buffer_push(&send_buffer, SOH) == OVER_CAPACITY_ERROR)
     {
         return SIMPLEDPP_SENDFAILED;
     }
-    return buffer_size(&send_buffer);
+    return byte_buffer_size(&send_buffer);
 }
 
 /**
@@ -115,24 +115,24 @@ int send_datas_add(const byte *data, int len)
         if (containSimpleDPPCtrolByte(data[i]))
         {
             // escaped control byte only 2 bytes
-            if (buffer_push(&send_buffer, ESC) == OVER_CAPACITY_ERROR)
+            if (byte_buffer_push(&send_buffer, ESC) == OVER_CAPACITY_ERROR)
             {
                 return SIMPLEDPP_SENDFAILED;
             }
-            if (buffer_push(&send_buffer, data[i]) == OVER_CAPACITY_ERROR)
+            if (byte_buffer_push(&send_buffer, data[i]) == OVER_CAPACITY_ERROR)
             {
                 return SIMPLEDPP_SENDFAILED;
             }
         }
         else
         {
-            if (buffer_push(&send_buffer, data[i]) == OVER_CAPACITY_ERROR)
+            if (byte_buffer_push(&send_buffer, data[i]) == OVER_CAPACITY_ERROR)
             {
                 return SIMPLEDPP_SENDFAILED;
             }
         }
     }
-    return buffer_size(&send_buffer);
+    return byte_buffer_size(&send_buffer);
 }
 
 /**
@@ -141,13 +141,13 @@ int send_datas_add(const byte *data, int len)
 int send_datas_end()
 {
     //4. push EOT
-    if (buffer_push(&send_buffer, EOT) == OVER_CAPACITY_ERROR)
+    if (byte_buffer_push(&send_buffer, EOT) == OVER_CAPACITY_ERROR)
     {
         return SIMPLEDPP_SENDFAILED;
     }
     //5. send message
     SimpleDPP_send_buffer();
-    return buffer_size(&send_buffer);
+    return byte_buffer_size(&send_buffer);
 }
 
 /**
@@ -161,9 +161,9 @@ int SimpleDPP_send_datas(int data_num, const byte *data, int data_len, ...)
     va_list args;
     int i;
     //1. empty buffer
-    buffer_clear(&send_buffer);
+    byte_buffer_clear(&send_buffer);
     //2. push SHO
-    buffer_push(&send_buffer, SOH);
+    byte_buffer_push(&send_buffer, SOH);
     //3. push message body,when encounter SOH,EOT or ESC,using ESC escape it.
     va_start(args, data_len);
     while (true)
@@ -174,18 +174,18 @@ int SimpleDPP_send_datas(int data_num, const byte *data, int data_len, ...)
             if (containSimpleDPPCtrolByte(data[i]))
             {
                 // escaped control byte only 2 bytes
-                if (buffer_push(&send_buffer, ESC) == OVER_CAPACITY_ERROR)
+                if (byte_buffer_push(&send_buffer, ESC) == OVER_CAPACITY_ERROR)
                 {
                     return SIMPLEDPP_SENDFAILED;
                 }
-                if (buffer_push(&send_buffer, data[i]) == OVER_CAPACITY_ERROR)
+                if (byte_buffer_push(&send_buffer, data[i]) == OVER_CAPACITY_ERROR)
                 {
                     return SIMPLEDPP_SENDFAILED;
                 }
             }
             else
             {
-                if (buffer_push(&send_buffer, data[i]) == OVER_CAPACITY_ERROR)
+                if (byte_buffer_push(&send_buffer, data[i]) == OVER_CAPACITY_ERROR)
                 {
                     return SIMPLEDPP_SENDFAILED;
                 }
@@ -200,13 +200,13 @@ int SimpleDPP_send_datas(int data_num, const byte *data, int data_len, ...)
     }
     va_end(args);
     //4. push EOT
-    if (buffer_push(&send_buffer, EOT) == OVER_CAPACITY_ERROR)
+    if (byte_buffer_push(&send_buffer, EOT) == OVER_CAPACITY_ERROR)
     {
         return SIMPLEDPP_SENDFAILED;
     }
     //5. send message
     SimpleDPP_send_buffer();
-    return buffer_size(&send_buffer);
+    return byte_buffer_size(&send_buffer);
 }
 
 // SimpleDPP receive state machine's states
@@ -235,7 +235,7 @@ void SimpleDPP_parse(byte c)
             SimpleDPPRevState = SIMPLEDPP_REV_WAIT_CTRL_BYTE;
             break;
         default:
-            if (buffer_push(&recv_buffer, c) == OVER_CAPACITY_ERROR)
+            if (byte_buffer_push(&recv_buffer, c) == OVER_CAPACITY_ERROR)
             {
                 SimpleDPPRevErrorInnerCallback(SIMPLEDPP_ERROR_REV_OVER_CAPACITY);
             }
@@ -245,7 +245,7 @@ void SimpleDPP_parse(byte c)
     case SIMPLEDPP_REV_WAIT_CTRL_BYTE:
         if (containSimpleDPPCtrolByte(c))
         {
-            if (buffer_push(&recv_buffer, c) == OVER_CAPACITY_ERROR)
+            if (byte_buffer_push(&recv_buffer, c) == OVER_CAPACITY_ERROR)
             {
                 SimpleDPPRevErrorInnerCallback(SIMPLEDPP_ERROR_REV_OVER_CAPACITY);
             }

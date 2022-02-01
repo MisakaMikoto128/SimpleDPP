@@ -41,7 +41,10 @@ private:
     QByteArray revBuffer;
     int SimpleDPPErrorCnt;
     int SimpleDPPRevState;
+    constexpr static int SEND_START = 0;
+    constexpr static int SENDING = 1;
 
+    int send_stage; //0:start, 1:sending,only used in send_datas()
 private:
     void SimpleDPPRecvInnerCallback(){
         emit RecvCallback(revBuffer);
@@ -72,33 +75,6 @@ public:
     }
     int getSimpleDPPErrorCnt(){return SimpleDPPErrorCnt;}
 
-    int send(const byte *data, int len){
-        int i;
-        //1. empty buffer
-        sendBuffer.clear();
-        //2. push SHO
-        sendBuffer.append(SOH);
-
-        for (i = 0; i < len; i++)
-        {
-            //3. push message body,when encounter SOH,EOT or ESC,using ESC escape it.
-            if (containSimpleDPPCtrolByte(data[i]))
-            {
-                // escaped control byte only 2 bytes
-                sendBuffer.append(ESC);
-                sendBuffer.append(data[i]);
-            }
-            else
-            {
-                sendBuffer.append(data[i]);
-            }
-        }
-        //4. push EOT
-        sendBuffer.append(EOT);
-        //5. send message
-        send_buffer();
-        return len;
-    }
     void parse(byte c){
         switch (SimpleDPPRevState)
         {
@@ -143,6 +119,112 @@ public:
         }
     }
 
+
+    int send(const byte *data, int len){
+        int i;
+        //1. empty buffer
+        sendBuffer.clear();
+        //2. push SHO
+        sendBuffer.append(SOH);
+
+        for (i = 0; i < len; i++)
+        {
+            //3. push message body,when encounter SOH,EOT or ESC,using ESC escape it.
+            if (containSimpleDPPCtrolByte(data[i]))
+            {
+                // escaped control byte only 2 bytes
+                sendBuffer.append(ESC);
+                sendBuffer.append(data[i]);
+            }
+            else
+            {
+                sendBuffer.append(data[i]);
+            }
+        }
+        //4. push EOT
+        sendBuffer.append(EOT);
+        //5. send message
+        send_buffer();
+        return len;
+    }
+
+
+public:
+    /**
+     * @brief must be used before send_datas_add() and send_datas_end()
+     */
+    void send_datas_start()
+    {
+        // 1. empty buffer
+        sendBuffer.clear();
+        // 2. push SHO
+        sendBuffer.append(SOH);
+    }
+
+    /**
+     * @brief must be used between send_datas_start() and send_datas_add()
+     */
+    void send_datas_add(const byte *data, int len)
+    {
+        for (int i = 0; i < len; i++)
+        {
+            //3. push message body,when encounter SOH,EOT or ESC,using ESC escape it.
+            if (containSimpleDPPCtrolByte(data[i]))
+            {
+                // escaped control byte only 2 bytes
+                sendBuffer.append(ESC);
+                sendBuffer.append(data[i]);
+            }
+            else
+            {
+                sendBuffer.append(data[i]);
+            }
+        }
+    }
+
+    /**
+     * @brief must be used after send_datas_start() and send_datas_add()
+     */
+    void send_datas_end()
+    {
+        //4. push EOT
+        sendBuffer.append(EOT);
+        //5. send message
+        send_buffer();
+    }
+
+public:
+    template <typename First, typename Second, typename... Rest>
+    int send_datas(const First &first, const Second &second, const Rest &...rest)
+    {
+        //if args number is not even, return SIMPLEDPP_SENDFAILED
+        if (sizeof...(rest) % 2 != 0)
+        {
+            return SIMPLEDPP_SENDFAILED;
+        }
+        const byte *data = (const char *)&first;
+        int len = (int)second;
+        switch (send_stage)
+        {
+        case SEND_START:
+            send_datas_start();
+            send_stage = SENDING;
+        case SENDING:
+            send_datas_add(data, len);
+            break;
+        default:
+            break;
+        }
+        return send_datas(rest...); // 将会根据语法来递归调用
+    }
+
+private:
+    int send_datas(void)
+    {
+        send_datas_end();
+        send_stage = SEND_START;
+        return sendBuffer.size();
+    }
 };
 
 #endif // SIMPLEDPP_H
