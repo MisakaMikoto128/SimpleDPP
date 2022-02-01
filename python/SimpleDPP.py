@@ -57,8 +57,8 @@ class SimpleDPP(object):
         return sendBuffer.__len__()
 
     @send.register
-    def _(self,data:str):
-        return self.send(data.encode('utf-8'))
+    def _(self,data:str,encoding='utf-8'):
+        return self.send(data.encode(encoding))
 
     '''
     @brief: Simple DPP receive msg.SimpleDPP receive state machine's states
