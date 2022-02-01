@@ -52,6 +52,9 @@ void SimpleDPP_default_init();
 int SimpleDPP_send(const byte *data, int len);
 int __SimpleDPP_send_datas(const byte *data,int data_len,...);
 
+int send_datas_start();
+int send_datas_add(const byte *data, int len);
+int send_datas_end();
 
 // Only works in C99    
 #define SimpleDPP_send_datas(van_arg,...) __SimpleDPP_send_datas(van_arg,##__VA_ARGS__,VAR_ARG_END)

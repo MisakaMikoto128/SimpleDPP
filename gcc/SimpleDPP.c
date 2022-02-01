@@ -102,6 +102,67 @@ int SimpleDPP_send(const byte *data, int len)
 }
 
 /**
+ * @brief must be used before send_datas_add() and send_datas_end()
+ */
+int send_datas_start()
+{
+    //1. empty buffer
+    buffer_clear(&send_buffer);
+    //2. push SHO
+    if (buffer_push(&send_buffer, SOH) == OVER_CAPACITY_ERROR)
+    {
+        return SIMPLEDPP_SENDFAILED;
+    }
+    return buffer_size(&send_buffer);
+}
+
+/**
+     * @brief must be used between send_datas_start() and send_datas_add()
+     */
+int send_datas_add(const byte *data, int len)
+{
+    for (int i = 0; i < len; i++)
+    {
+        //3. push message body,when encounter SOH,EOT or ESC,using ESC escape it.
+        if (containSimpleDPPCtrolByte(data[i]))
+        {
+            // escaped control byte only 2 bytes
+            if (buffer_push(&send_buffer, ESC) == OVER_CAPACITY_ERROR)
+            {
+                return SIMPLEDPP_SENDFAILED;
+            }
+            if (buffer_push(&send_buffer, data[i]) == OVER_CAPACITY_ERROR)
+            {
+                return SIMPLEDPP_SENDFAILED;
+            }
+        }
+        else
+        {
+            if (buffer_push(&send_buffer, data[i]) == OVER_CAPACITY_ERROR)
+            {
+                return SIMPLEDPP_SENDFAILED;
+            }
+        }
+    }
+    return buffer_size(&send_buffer);
+}
+
+/**
+ * @brief must be used after send_datas_start() and send_datas_add()
+ */
+int send_datas_end()
+{
+    //4. push EOT
+    if (buffer_push(&send_buffer, EOT) == OVER_CAPACITY_ERROR)
+    {
+        return SIMPLEDPP_SENDFAILED;
+    }
+    //5. send message
+    SimpleDPP_send_buffer();
+    return buffer_size(&send_buffer);
+}
+
+/**
  * @brief simple dpp send datas,the input datas will be treated as one data.The last parameter should be VAR_ARG_END.
  * @return success: The number of bytes actually sent
  * fail: SAMPLE_ERROR

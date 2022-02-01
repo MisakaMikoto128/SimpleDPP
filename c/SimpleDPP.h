@@ -51,6 +51,11 @@ void SimpleDPP_init(byte *send_data, int send_capacity, byte *recv_data, int rec
 int SimpleDPP_send(const byte *data, int len);
 int SimpleDPP_send_datas(int data_num,const byte *data, int data_len,...);
 
+
+int send_datas_start();
+int send_datas_add(const byte *data, int len);
+int send_datas_end();
+
 void SimpleDPP_parse(byte c);
 int getSimpleDPPErrorCnt();
 __unimplemented void SimpleDPPRecvCallback(const byte *data, int len);
