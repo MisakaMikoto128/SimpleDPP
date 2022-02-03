@@ -16,8 +16,8 @@ classdef SimpleDPP < handle
         SOH=cast(hex2dec('01'),'uint8');
         EOT=cast(hex2dec('04'),'uint8');
         ESC=cast(hex2dec('18'),'uint8');
-        dtype = 'uint8'
-        
+        dtypes = {'uint8','char','string'}
+        transmissive = 'uint8'
         %define SimpleDPP receive error code
         %level 0:
         SIMPLEDPP_RECEIVE_ERROR=-1;
@@ -46,28 +46,18 @@ classdef SimpleDPP < handle
             end
         end
         
-        %data 为'uint8'
+        %@brief: 发送uint8，char，string类型数据，使用feature('locale')查看默认编码
+        %@param: data 
         function flag = send(obj,data)
-            if(isa(data,obj.dtype))
-                obj.send_buffer.clear();
-                obj.send_buffer.push(obj.SOH);
-                len = length(data);
-                for i = 1:len
-                    c = data(i);
-                    if(obj.containSimpleDPPCtrolByte(c))
-                        obj.send_buffer.push(obj.ESC);
-                        obj.send_buffer.push(c);
-                    else
-                        obj.send_buffer.push(c);
-                    end
-                    
-                end
-                obj.send_buffer.push(obj.EOT);
-                obj.send_buffer_fun();
+            obj.send_datas_start();
+            data = obj.typeContainedIndtypes(data);
+            if(data ~= false)
+                obj.send_datas_add(data);
+                obj.send_datas_end();
                 flag = obj.send_buffer.length();
             else
-                error("The input datatype is mismatching obj.dtype:",obj.dtype);
                 flag = obj.SIMPLEDPP_SENDFAILED;
+                error('Input type must be "uint8","char","string",and your input type is%s,%d',class(data),int32(flag));
             end
         end
         
@@ -76,9 +66,10 @@ classdef SimpleDPP < handle
             obj.send_buffer.push(obj.SOH);
         end
         
-        %返回值为当前缓冲区的字节数
+        %@brief Only inputs of type uint8 are accepted
+        %@return success:返回值为当前缓冲区的字节数
         function flag = send_datas_add(obj,data)
-            if(isa(data,obj.dtype))
+            if(isa(data,obj.transmissive))
                     len = length(data);
                     for i = 1:len
                         c = data(i);
@@ -102,15 +93,19 @@ classdef SimpleDPP < handle
             obj.send_buffer_fun();
         end
         
+        
+        %transmissive
         function flag = send_datas(obj,varargin)
             obj.send_datas_start();
-            for i = 1:nargin-1 
-
+            for i = 1:nargin-1
                 data = varargin(i);
                 data = cell2mat(data);
-                flag = obj.send_datas_add(data);
-                if flag < 0
-                   return; 
+                data = obj.typeContainedIndtypes(data);
+                if(data ~= false)
+                    obj.send_datas_add(data);
+                else
+                    flag = obj.SIMPLEDPP_SENDFAILED;
+                    error('Input type must be "uint8","char","string",and your input type is%s,%d',class(data),int32(flag));
                 end
             end
             obj.send_datas_end();
@@ -120,7 +115,7 @@ classdef SimpleDPP < handle
         
         
         function parse(obj,datas)
-            if(isa(datas,obj.dtype))
+            if(isa(datas,obj.transmissive))
                 len = length(datas);
                 for i = 1:len
                     obj.parse_one_byte(datas(i));
@@ -134,6 +129,21 @@ classdef SimpleDPP < handle
     methods(Hidden)
         function flag = containSimpleDPPCtrolByte(obj,c)
             flag = ((c) == obj.SOH || (c) == obj.EOT || (c) == obj.ESC);
+        end
+       
+        %检查输入数据类型是否在obj.dtypes中
+        %@return 如果输入数据类型输在obj.dtypes中返回uint8
+        %        如果输入数据类型输不在obj.dtypes中返回false
+        function flag = typeContainedIndtypes(obj,data)
+            if(isa(data,cell2mat(obj.dtypes(1))))
+                flag = data;
+            elseif(isa(data,cell2mat(obj.dtypes(2))))
+                flag = uint8(data);
+            elseif(isa(data,cell2mat(obj.dtypes(3))))
+                flag = uint8(char(data));
+            else
+                flag = false;
+            end
         end
         
         function parse_one_byte(obj,c)

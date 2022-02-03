@@ -83,7 +83,7 @@ public class SimpleDPP {
      * Simple DPP send string msg,default charset is UTF-8.
      * </p>
      *
-     * @param data string data you will be sent.
+     * @param data send string data with the default encoding UTF-8
      * @return success: send data bytes length
      *         fail: SIMPLEDPP_SENDFAILED
      * @see #send(byte[] data)
