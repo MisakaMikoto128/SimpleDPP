@@ -55,5 +55,6 @@ public class test {
 
         simpleDPP.send("Hell0/r/n#@012");
         simpleDPP.send_datas("Hell0/r/n#@012","ssss");
+        simpleDPP.send_datas("bytes1",new byte[]{1,2,3},"bytes3a了",StandardCharsets.UTF_8);
     } 
 }

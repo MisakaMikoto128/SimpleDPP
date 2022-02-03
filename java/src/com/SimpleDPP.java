@@ -74,7 +74,7 @@ public class SimpleDPP {
      *         fail: SIMPLEDPP_SENDFAILED
      * @see #send(byte[] data)
      */
-    public int send(Charset charset,String data) {
+    public int send(String data,Charset charset) {
         return send(data.getBytes(charset));
     }
 
@@ -139,66 +139,44 @@ public class SimpleDPP {
         simpleDPPSendBytesData.sendBytesData(ByteListToArray(sendBuffer));
     }
 
+
     /**
      * <p>
-     * Simple DPP send multiple messages.
+     * Simple DPP send multiple messages.The message type can be String byte[] or mixed.If no default encoding specified,
+     * then utf-8 will be used.
      * </p>
      *
-     * @param datas... byte[].. datas you will be sent.
+     * @param datas datas you will be sent.
      * @return success: send data bytes length
      *         fail: SIMPLEDPP_SENDFAILED
-     * @examples SimpleDPP.send_datas(bytes1,bytes2,bytes3,...);
+     * @examples SimpleDPP.send_datas("bytes1",new byte[]{1,2,3},"bytes3",...,StandardCharsets.UTF_8);
      */
-    public int send_datas(byte[]... datas) {
+    public <T> int send_datas(T... datas){
+        int datas_len = datas.length;
+        Charset encoding = StandardCharsets.UTF_8;
+        if(datas[datas.length-1] instanceof Charset){
+            encoding = (Charset) datas[datas.length-1];
+            datas_len = datas.length-1;
+        }
+
         send_datas_start();
-        for (byte[] data : datas) {
-            send_datas_add(data);
+        for (int i=0;i<datas_len;i++){
+            if(datas[i] instanceof String)//deal String
+            {
+                String data = (String) datas[i];
+                send_datas_add(data.getBytes(encoding));
+            }
+            else if (datas[i] instanceof byte[])//deal byte[]
+            {
+                send_datas_add((byte[]) datas[i]);
+            }else //otherwise return failed
+            {
+                return SIMPLEDPP_SENDFAILED;
+            }
         }
         send_datas_end();
         return sendBuffer.size();
     }
-
-
-    
-    /**
-     * <p>
-     * Simple DPP send multiple messages.
-     * </p>
-     *
-     * @param str_datas... string datas you will be sent.
-     * @return success: send data bytes length
-     *         fail: SIMPLEDPP_SENDFAILED
-     * @examples SimpleDPP.send_datas(StandardCharsets.UTF_8,"Hello","World!",...);
-     */
-    public int send_datas(Charset charset,String... str_datas) {
-        send_datas_start();
-        for (String str : str_datas) {
-            
-            send_datas_add(str.getBytes(charset));
-        }
-        send_datas_end();
-        return sendBuffer.size();
-    }
-
-        /**
-     * <p>
-     * Simple DPP send multiple messages,using default charset is UTF-8.
-     * </p>
-     *
-     * @param str_datas... string datas you will be sent.
-     * @return success: send data bytes length
-     *         fail: SIMPLEDPP_SENDFAILED
-     * @examples SimpleDPP.send_datas("Hello","World!",...);
-     */
-    public int send_datas(String... str_datas) {
-        send_datas_start();
-        for (String str : str_datas) {
-            send_datas_add(str.getBytes(Charset.forName("UTF-8")));
-        }
-        send_datas_end();
-        return sendBuffer.size();
-    }
-
 
 
     /**
