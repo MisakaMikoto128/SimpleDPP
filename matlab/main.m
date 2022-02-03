@@ -5,11 +5,11 @@ p = @putcharhandle;
 disp(p);
 p;
 s = SimpleDPP(p,hd{1},hd{2});
-ret = s.send(uint8('Hello'));
+ret = s.send('Hello');
 if(ret == SimpleDPP.SIMPLEDPP_SENDFAILED)
     disp("Send error!")
 end
-ret = s.send_datas(uint8('Hello'),uint8('world!'));
+ret = s.send_datas('Hello','world!');
 if(ret == SimpleDPP.SIMPLEDPP_SENDFAILED)
     disp("Send error!")
 end
