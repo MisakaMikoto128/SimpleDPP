@@ -45,7 +45,7 @@ int main(void)
     }
 
     //3. send and parse multiple msg,msg cnn be type of char * or byte *
-    if(SimpleDPP_send_datas(2, "hello", 5,"AA",2) == SIMPLEDPP_SENDFAILED)
+    if(SimpleDPP_send_datas("hello", 5,"AA",2) == SIMPLEDPP_SENDFAILED)
     {
         printf("send error\n");
     }
