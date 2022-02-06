@@ -3,6 +3,9 @@
 #include "ByteBuffer.h"
 #include <stdarg.h>
 #include <stddef.h>
+/*
+support Arm Compiler 6/5
+*/
 #define VAR_ARG_END ((void *)0)
 
 //cast char * to byte *
@@ -43,8 +46,8 @@ typedef int SimpleDPPERROR;
 //default buffer size
 #define SIMPLEDDP_DEFAULT_BUFFER_SIZE 1024
 
-__attribute__((weak)) byte __send_data[SIMPLEDDP_DEFAULT_BUFFER_SIZE];
-__attribute__((weak)) byte __recv_data[SIMPLEDDP_DEFAULT_BUFFER_SIZE];
+// extern __attribute__((weak)) byte __send_data[SIMPLEDDP_DEFAULT_BUFFER_SIZE];
+// extern __attribute__((weak)) byte __recv_data[SIMPLEDDP_DEFAULT_BUFFER_SIZE];
 
 // Externally provided methods
 void SimpleDPP_init(int send_capacity, int recv_capacity);

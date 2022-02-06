@@ -8,8 +8,8 @@ static ByteBuffer recv_buffer;
 static int SimpleDPPErrorCnt;
 static int SimpleDPPRevState;
 
-__attribute__((weak)) byte __send_data[SIMPLEDDP_DEFAULT_BUFFER_SIZE];
-__attribute__((weak)) byte __recv_data[SIMPLEDDP_DEFAULT_BUFFER_SIZE];
+__attribute__((weak)) byte __send_data[SIMPLEDDP_DEFAULT_BUFFER_SIZE]={0};
+__attribute__((weak)) byte __recv_data[SIMPLEDDP_DEFAULT_BUFFER_SIZE]={0};
 
 // #define SimpleDPP_ESCAPE_CHAR_LEN 2
 // static char SimpleDPP_control_byte_buf[SimpleDPP_ESCAPE_CHAR_LEN] = {0};

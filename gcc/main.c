@@ -1,9 +1,10 @@
 #include "SimpleDPP.h"
 #include <stdio.h>
 #include <string.h>
-#define BUFFER_SIZE 1024
-__implemented byte __send_data[BUFFER_SIZE];
-__implemented byte __recv_data[BUFFER_SIZE];
+#define SIMPLE_DPP_REV_BUFFER_SIZE 1024
+#define SIMPLE_DPP_SEND_BUFFER_SIZE 1024
+__implemented byte __send_data[SIMPLE_DPP_SEND_BUFFER_SIZE];
+__implemented byte __recv_data[SIMPLE_DPP_REV_BUFFER_SIZE];
 
 __implemented void SimpleDPPRecvCallback(const byte *data, int len)
 {
@@ -31,7 +32,7 @@ int main(void)
 
     //1. Init Simple DPP data buffer
     //1.1 using custom buffers, the default buffer will not compile
-    SimpleDPP_init(BUFFER_SIZE,BUFFER_SIZE);
+    SimpleDPP_init(SIMPLE_DPP_SEND_BUFFER_SIZE,SIMPLE_DPP_REV_BUFFER_SIZE);
     //1.2 or you can use SimpleDPP_default_init(),and "__send_data" and "__recv_data" don't need to be defined.
     //default buffer size is 1024.
     SimpleDPP_default_init();
