@@ -50,8 +50,8 @@ typedef int SimpleDPPERROR;
 // extern __attribute__((weak)) byte __recv_data[SIMPLEDDP_DEFAULT_BUFFER_SIZE];
 
 // Externally provided methods
-void SimpleDPP_init(int send_capacity, int recv_capacity);
-void SimpleDPP_default_init();
+void SimpleDPP_init(void);
+
 int SimpleDPP_send(const byte *data, int len);
 int __SimpleDPP_send_datas(const byte *data,int data_len,...);
 

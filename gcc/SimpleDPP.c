@@ -10,21 +10,15 @@ static int SimpleDPPRevState;
 
 __attribute__((weak)) byte __send_data[SIMPLEDDP_DEFAULT_BUFFER_SIZE]={0};
 __attribute__((weak)) byte __recv_data[SIMPLEDDP_DEFAULT_BUFFER_SIZE]={0};
+__attribute__((weak)) int send_capacity = SIMPLEDDP_DEFAULT_BUFFER_SIZE;
+__attribute__((weak)) int recv_capacity = SIMPLEDDP_DEFAULT_BUFFER_SIZE;
 
 // #define SimpleDPP_ESCAPE_CHAR_LEN 2
 // static char SimpleDPP_control_byte_buf[SimpleDPP_ESCAPE_CHAR_LEN] = {0};
-void SimpleDPP_init(int send_capacity, int recv_capacity)
+void SimpleDPP_init()
 {
     byte_buffer_setmemory(&send_buffer, __send_data, send_capacity);
     byte_buffer_setmemory(&recv_buffer, __recv_data, recv_capacity);
-    SimpleDPPErrorCnt = 0;
-    SimpleDPPRevState = SIMPLEDPP_REV_WAIT_START;
-}
-
-void SimpleDPP_default_init()
-{
-    byte_buffer_setmemory(&send_buffer, __send_data, SIMPLEDDP_DEFAULT_BUFFER_SIZE);
-    byte_buffer_setmemory(&recv_buffer, __recv_data, SIMPLEDDP_DEFAULT_BUFFER_SIZE);
     SimpleDPPErrorCnt = 0;
     SimpleDPPRevState = SIMPLEDPP_REV_WAIT_START;
 }

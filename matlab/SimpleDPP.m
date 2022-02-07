@@ -17,7 +17,7 @@ classdef SimpleDPP < handle
         EOT=cast(hex2dec('04'),'uint8');
         ESC=cast(hex2dec('18'),'uint8');
         dtypes = {'uint8','char','string'}
-        transmissive = 'uint8'
+        transmissive_type = 'uint8'
         %define SimpleDPP receive error code
         %level 0:
         SIMPLEDPP_RECEIVE_ERROR=-1;
@@ -69,7 +69,7 @@ classdef SimpleDPP < handle
         %@brief Only inputs of type uint8 are accepted
         %@return success:返回值为当前缓冲区的字节数
         function flag = send_datas_add(obj,data)
-            if(isa(data,obj.transmissive))
+            if(isa(data,obj.transmissive_type))
                     len = length(data);
                     for i = 1:len
                         c = data(i);
@@ -94,7 +94,7 @@ classdef SimpleDPP < handle
         end
         
         
-        %transmissive
+        %transmissive_type
         function flag = send_datas(obj,varargin)
             obj.send_datas_start();
             for i = 1:nargin-1
@@ -115,7 +115,7 @@ classdef SimpleDPP < handle
         
         
         function parse(obj,datas)
-            if(isa(datas,obj.transmissive))
+            if(isa(datas,obj.transmissive_type))
                 len = length(datas);
                 for i = 1:len
                     obj.parse_one_byte(datas(i));

@@ -1,10 +1,12 @@
 #include "SimpleDPP.h"
 #include <stdio.h>
 #include <string.h>
-#define SIMPLE_DPP_REV_BUFFER_SIZE 1024
-#define SIMPLE_DPP_SEND_BUFFER_SIZE 1024
+#define SIMPLE_DPP_REV_BUFFER_SIZE 512
+#define SIMPLE_DPP_SEND_BUFFER_SIZE 512
 __implemented byte __send_data[SIMPLE_DPP_SEND_BUFFER_SIZE];
 __implemented byte __recv_data[SIMPLE_DPP_REV_BUFFER_SIZE];
+__implemented int send_capacity = SIMPLE_DPP_SEND_BUFFER_SIZE;
+__implemented int recv_capacity = SIMPLE_DPP_REV_BUFFER_SIZE;
 
 __implemented void SimpleDPPRecvCallback(const byte *data, int len)
 {
@@ -31,13 +33,10 @@ int main(void)
 {
 
     //1. Init Simple DPP data buffer
-    //1.1 using custom buffers, the default buffer will not compile
-    SimpleDPP_init(SIMPLE_DPP_SEND_BUFFER_SIZE,SIMPLE_DPP_REV_BUFFER_SIZE);
-    //1.2 or you can use SimpleDPP_default_init(),and "__send_data" and "__recv_data" don't need to be defined.
-    //default buffer size is 1024.
-    SimpleDPP_default_init();
-
-
+    //1.1 if you want to use custom buffers, you just need to explicitly define them.default buffer size is 1024.
+    //1.2 if you want to use default buffers, you just needn't to do anything.
+    SimpleDPP_init();
+    
     //2. send and parse one msg,msg cnn be type of char * or byte *
     char *msg = "hello worl@\\00\r\n000d";
     if (SimpleDPP_send(msg, strlen(msg)) == SIMPLEDPP_SENDFAILED)
