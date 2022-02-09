@@ -4,7 +4,7 @@
 #include <stdarg.h>
 #include <stddef.h>
 /*
-support Arm Compiler 6/5
+support Arm Compiler 6/5,gcc/clang
 */
 #define VAR_ARG_END ((void *)0)
 
