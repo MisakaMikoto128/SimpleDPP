@@ -7,7 +7,8 @@ Note: SimpleDPP在现在的版本中处于用途简单和性能的考量未实�
 
 ## 注意
 1. 线程不安全，发送和接收处理只能在一个线程中完成
-
+2. 每个版本都是支持直接发送字符串的。
+3. 注意不同字节序的设备通信在处理接收时要转换端序。
 
 ## 支持
 **C++**：C++11以上标准
@@ -17,11 +18,13 @@ Note: SimpleDPP在现在的版本中处于用途简单和性能的考量未实�
 
 # 使用：
 ## C语言版本(GCC)
+&emsp;&emsp;C语言版本多考虑在嵌入式设备上运行，均不使用动态内存分配缓冲区内存，初始化工作主要是指定缓冲区的内存地址和大小。
+### 基本用法
 - Step1 包含头文件
 ```c
 #include "SimpleDPP.h"
 ```
-- Step2 初始化SimpleDPP
+- Step2 初始化SimpleDPP，默认时使用内部定义的缓冲区，发送和接收缓冲区均为1024字节。
 
 ```c
 SimpleDPP_init();
@@ -62,7 +65,17 @@ __implemented void SimpleDPPRevErrorCallback(SimpleDPPERROR error_code){
     }
     ```
 
+### 自定义缓冲区
+&emsp;&emsp;有些时候可能在一下RAM比较小的设备上运行，并且发送接收任务的数据量很小，这时候需要考虑自定义缓冲区内存。GCC版本在实现上使用了`__attribute__((weak))`属性，这在ARM的C编译器中也是支持的，你只需要安装下面方法重新定义缓冲字节数组，这样默认的缓冲字节数组就会失效。
 
+```c
+#define SIMPLE_DPP_REV_BUFFER_SIZE 512
+#define SIMPLE_DPP_SEND_BUFFER_SIZE 512
+__implemented byte __send_data[SIMPLE_DPP_SEND_BUFFER_SIZE];
+__implemented byte __recv_data[SIMPLE_DPP_REV_BUFFER_SIZE];
+__implemented int send_capacity = SIMPLE_DPP_SEND_BUFFER_SIZE;
+__implemented int recv_capacity = SIMPLE_DPP_REV_BUFFER_SIZE;
+```
 
 # 实现
 
