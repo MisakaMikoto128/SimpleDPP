@@ -43,9 +43,10 @@ private:
     int SimpleDPPErrorCnt;
     int SimpleDPPRevState;
 
-    int send_stage; //0:start, 1:sending,only used in send_datas()
+
     constexpr static int SEND_START = 0;
     constexpr static int SENDING = 1;
+    int send_stage=SEND_START; //0:start, 1:sending,only used in send_datas()
 private:
     void SimpleDPPRecvInnerCallback(){
         emit RecvCallback(revBuffer);
@@ -68,13 +69,19 @@ public:
         SimpleDPPErrorCnt = 0;
         SimpleDPPRevState = SIMPLEDPP_REV_WAIT_START;
     }
+    int getSimpleDPPErrorCnt(){return SimpleDPPErrorCnt;}
 
     void parse(const byte* data,int len){
         for(int i = 0; i < len;i++){
             parse(data[i]);
         }
     }
-    int getSimpleDPPErrorCnt(){return SimpleDPPErrorCnt;}
+
+    void parse(const QByteArray & data){
+        for(char c:data){
+            parse(c);
+        }
+    }
 
     void parse(byte c){
         switch (SimpleDPPRevState)

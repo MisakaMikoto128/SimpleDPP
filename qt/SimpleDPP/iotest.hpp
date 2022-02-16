@@ -15,10 +15,16 @@ public:
     explicit iotest(QObject *parent)
         : QObject{parent}
     {
-        connect(&sdp,&SimpleDPP::SendBuffer,this,&iotest::write);
-        connect(&sdp,&SimpleDPP::RecvCallback,this,&iotest::SimpleDPPRecvCallback);
-        connect(&sdp,&SimpleDPP::RevErrorCallback,this,&iotest::SimpleDPPRevErrorCallback);
+//        connect(&sdp,&SimpleDPP::SendBuffer,this,&iotest::write);
+//        connect(&sdp,&SimpleDPP::RecvCallback,this,&iotest::SimpleDPPRecvCallback);
+//        connect(&sdp,&SimpleDPP::RevErrorCallback,this,&iotest::SimpleDPPRevErrorCallback);
+        connect(&sdp,SIGNAL(SendBuffer(const QByteArray &)),this,SLOT(write(const QByteArray &)));
+        connect(&sdp,&SimpleDPP::RecvCallback,this,SLOT(SimpleDPPRecvCallback(const QByteArray&)));
+        connect(&sdp,&SimpleDPP::RevErrorCallback,this,SLOT(SimpleDPPRevErrorCallback(SimpleDPPERROR)));
 
+//        connect(&sdp,&SimpleDPP::SendBuffer,[&](const QByteArray& writedata){
+//            //
+//        });
 
         //2. send and parse one msg,msg cnn be type of char * or byte *
         const char *msg = "hello worl@\\00\r\n000d";
