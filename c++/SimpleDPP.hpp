@@ -75,6 +75,17 @@ private:
     std::function<void(const std::vector<byte> &senddata)> SendBuffer = nullptr;
 
 public:
+    /**
+     * @brief send_datas : simpledpp send data
+     * @param first data object will be send.
+     * @param second data object byte length.
+     * @param rest variable parameter
+     * @return The number of bytes actually sent
+     * @example send float and string:
+     * float a = 1f;
+     * char[] str = "simpledpp";
+     * send_datas(a,sizeof(a),str,sizeof(str));
+     */
     template <class T>
     void bindRecvCallback(const T &obj, void (T::*func)(const std::vector<byte> &revdata))
     {
