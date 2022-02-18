@@ -87,19 +87,19 @@ public:
      * send_datas(a,sizeof(a),str,sizeof(str));
      */
     template <class T>
-    void bindRecvCallback(const T &obj, void (T::*func)(const std::vector<byte> &revdata))
+    void bindRecvCallback(const T *obj, void (T::*func)(const std::vector<byte> &revdata))
     {
         RecvCallback = std::bind(func, obj, std::placeholders::_1);
     }
 
     template <class T>
-    void bindRevErrorCallback(const T &obj, void (T::*func)(SimpleDPPERROR error_code))
+    void bindRevErrorCallback(const T *obj, void (T::*func)(SimpleDPPERROR error_code))
     {
         RevErrorCallback = std::bind(func, obj, std::placeholders::_1);
     }
 
     template <class T>
-    void bindSendBuffer(const T &obj, void (T::*func)(const std::vector<byte> &senddata))
+    void bindSendBuffer(const T *obj, void (T::*func)(const std::vector<byte> &senddata))
     {
         SendBuffer = std::bind(func, obj, std::placeholders::_1);
     }
