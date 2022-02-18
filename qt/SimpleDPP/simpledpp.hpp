@@ -216,7 +216,9 @@ public:
         {
         case SEND_START:
             send_datas_start();
+            send_datas_add(data, len);
             send_stage = SENDING;
+            break;
         case SENDING:
             send_datas_add(data, len);
             break;
