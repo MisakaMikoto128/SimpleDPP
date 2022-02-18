@@ -221,7 +221,7 @@ public:
         {
             return SIMPLEDPP_SENDFAILED;
         }
-        const byte *data = (const char *)&first;
+        const byte *data = (const byte *)&first;
         int len = (int)second;
         switch (send_stage)
         {
