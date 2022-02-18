@@ -202,6 +202,17 @@ public:
     }
 
 public:
+    /**
+     * @brief send_datas : simpledpp send data
+     * @param first data object will be send.
+     * @param second data object byte length.
+     * @param rest variable parameter
+     * @return The number of bytes actually sent
+     * @example send float and string:
+     * float a = 1f;
+     * char[] str = "simpledpp";
+     * send_datas(a,sizeof(a),str,sizeof(str));
+     */
     template <typename First, typename Second, typename... Rest>
     int send_datas(const First &first, const Second &second, const Rest &...rest)
     {
