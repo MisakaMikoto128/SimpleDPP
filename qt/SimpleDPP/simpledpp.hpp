@@ -211,7 +211,8 @@ public:
      * @example send float and string:
      * float a = 1f;
      * char[] str = "simpledpp";
-     * send_datas(a,sizeof(a),str,sizeof(str));
+     * char *p = &str[0];
+     * send_datas(&a,sizeof(a),str,sizeof(str),p,sizeof(str));
      */
     template <typename First, typename Second, typename... Rest>
     int send_datas(const First &first, const Second &second, const Rest &...rest)
@@ -221,7 +222,7 @@ public:
         {
             return SIMPLEDPP_SENDFAILED;
         }
-        const byte *data = (const byte *)&first;
+        const byte *data = (const byte *)first;
         int len = (int)second;
         switch (send_stage)
         {

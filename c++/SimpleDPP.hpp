@@ -10,14 +10,14 @@
 #define SIMPLEDPP_SENDFAILED -2 // USING,SEND ONLY USING THIS ERROR CODE
 #define SIMPLEDPP_NORMAL 0
 // level 1:
-#define SIMPLEDPP_ERROR_REV_OVER_CAPACITY -11 //USING
+#define SIMPLEDPP_ERROR_REV_OVER_CAPACITY -11 // USING
 #define SIMPLEDPP_ERROR_SEND_OVER_CAPACITY -12
 // level 2:
-#define SIMPLEDPP_ERROR_REV_SOH_WHEN_WAIT_END -21                //USING
-#define SIMPLEDPP_ERROR_REV_NONCTRL_BYTE_WHEN_WAIT_CTRL_BYTE -22 //USING
+#define SIMPLEDPP_ERROR_REV_SOH_WHEN_WAIT_END -21                // USING
+#define SIMPLEDPP_ERROR_REV_NONCTRL_BYTE_WHEN_WAIT_CTRL_BYTE -22 // USING
 #define SIMPLEDPP_CRC_CHECK_ERROR -23
 
-//cast char * to byte *
+// cast char * to byte *
 #define byte char
 #define CAST_CHAR_PTR_TO_BYTE_PTR(ptr) (byte *)(ptr)
 
@@ -28,9 +28,9 @@
 
 typedef int SimpleDPPERROR;
 // SimpleDPP frame control byte (The frame delimiter)
-#define SOH 0x01 //DEC: 1
-#define EOT 0x04 //DEC: 4
-#define ESC 0x18 //DEC: 27
+#define SOH 0x01 // DEC: 1
+#define EOT 0x04 // DEC: 4
+#define ESC 0x18 // DEC: 27
 #define containSimpleDPPCtrolByte(c) ((c) == SOH || (c) == EOT || (c) == ESC)
 
 class SimpleDPP
@@ -43,7 +43,7 @@ private:
     constexpr static int SEND_START = 0;
     constexpr static int SENDING = 1;
 
-    int send_stage; //0:start, 1:sending,only used in send_datas()
+    int send_stage; // 0:start, 1:sending,only used in send_datas()
 private:
     void SimpleDPPRecvInnerCallback()
     {
@@ -76,32 +76,46 @@ private:
 
 public:
     /**
-     * @brief send_datas : simpledpp send data
-     * @param first data object will be send.
-     * @param second data object byte length.
-     * @param rest variable parameter
-     * @return The number of bytes actually sent
-     * @example send float and string:
-     * float a = 1f;
-     * char[] str = "simpledpp";
-     * send_datas(a,sizeof(a),str,sizeof(str));
+     * @brief
+     *
+     * @tparam T
+     * @param obj T * pointer
+     * @param func T::func
      */
     template <class T>
-    void bindRecvCallback(const T *obj, void (T::*func)(const std::vector<byte> &revdata))
+    void bindRecvCallback(T *obj, void (T::*func)(const std::vector<byte> &revdata))
     {
-        RecvCallback = std::bind(func, obj, std::placeholders::_1);
+        auto lambda = [obj, func](const std::vector<byte> &revdata)
+        { (obj->*func)(revdata); };
+        RecvCallback = lambda;
     }
-
+    /**
+     * @brief
+     *
+     * @tparam T
+     * @param obj T * pointer
+     * @param func T::func
+     */
     template <class T>
-    void bindRevErrorCallback(const T *obj, void (T::*func)(SimpleDPPERROR error_code))
+    void bindRevErrorCallback(T *obj, void (T::*func)(SimpleDPPERROR error_code))
     {
-        RevErrorCallback = std::bind(func, obj, std::placeholders::_1);
+        auto lambda = [obj, func](SimpleDPPERROR error_code)
+        { (obj->*func)(error_code); };
+        RevErrorCallback = lambda;
     }
-
+    /**
+     * @brief
+     *
+     * @tparam T
+     * @param obj T * pointer
+     * @param func T::func
+     */
     template <class T>
-    void bindSendBuffer(const T *obj, void (T::*func)(const std::vector<byte> &senddata))
+    void bindSendBuffer(T *obj, void (T::*func)(const std::vector<byte> &senddata))
     {
-        SendBuffer = std::bind(func, obj, std::placeholders::_1);
+        auto lambda = [obj, func](const std::vector<byte> &senddata)
+        { (obj->*func)(senddata); };
+        SendBuffer = lambda;
     }
 
     void bindRecvCallback(std::function<void(const std::vector<byte> &revdata)> RecvCallback)
@@ -186,14 +200,14 @@ public:
     int send(const byte *data, int len)
     {
         int i;
-        //1. empty buffer
+        // 1. empty buffer
         sendBuffer.clear();
-        //2. push SHO
+        // 2. push SHO
         sendBuffer.push_back(SOH);
 
         for (i = 0; i < len; i++)
         {
-            //3. push message body,when encounter SOH,EOT or ESC,using ESC escape it.
+            // 3. push message body,when encounter SOH,EOT or ESC,using ESC escape it.
             if (containSimpleDPPCtrolByte(data[i]))
             {
                 // escaped control byte only 2 bytes
@@ -205,9 +219,9 @@ public:
                 sendBuffer.push_back(data[i]);
             }
         }
-        //4. push EOT
+        // 4. push EOT
         sendBuffer.push_back(EOT);
-        //5. send message
+        // 5. send message
         send_buffer();
         return sendBuffer.size();
     }
@@ -231,7 +245,7 @@ public:
     {
         for (int i = 0; i < len; i++)
         {
-            //3. push message body,when encounter SOH,EOT or ESC,using ESC escape it.
+            // 3. push message body,when encounter SOH,EOT or ESC,using ESC escape it.
             if (containSimpleDPPCtrolByte(data[i]))
             {
                 // escaped control byte only 2 bytes
@@ -250,22 +264,34 @@ public:
      */
     void send_datas_end()
     {
-        //4. push EOT
+        // 4. push EOT
         sendBuffer.push_back(EOT);
-        //5. send message
+        // 5. send message
         send_buffer();
     }
 
 public:
+    /**
+     * @brief send_datas : simpledpp send data
+     * @param first data object will be send.
+     * @param second data object byte length.
+     * @param rest variable parameter
+     * @return The number of bytes actually sent
+     * @example send float and string:
+     * float a = 1f;
+     * char[] str = "simpledpp";
+     * char *p = &str[0];
+     * send_datas(&a,sizeof(a),str,sizeof(str),p,sizeof(str));
+     */
     template <typename First, typename Second, typename... Rest>
     int send_datas(const First &first, const Second &second, const Rest &...rest)
     {
-        //if args number is not even, return SIMPLEDPP_SENDFAILED
+        // if args number is not even, return SIMPLEDPP_SENDFAILED
         if (sizeof...(rest) % 2 != 0)
         {
             return SIMPLEDPP_SENDFAILED;
         }
-        const byte *data = (const byte *)&first;
+        const byte *data = (const byte *)first;
         int len = (int)second;
         switch (send_stage)
         {
