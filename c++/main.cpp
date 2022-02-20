@@ -39,7 +39,7 @@ int main(void)
 
 
     //2. send and parse one msg,msg cnn be type of char * or sdp_byte *
-    char *msg = "hello worl@\\00\r\n000d";
+    const char *msg = "hello worl@\\00\r\n000d";
     if (sdp.send(msg, strlen(msg)) == SIMPLEDPP_SENDFAILED)
     {
         printf("send error\n");
