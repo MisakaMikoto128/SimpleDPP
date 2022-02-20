@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <functional>
+#include <cstddef>
 
 // define SimpleDPP receive error code
 // level 0:
@@ -17,12 +18,11 @@
 #define SIMPLEDPP_ERROR_REV_NONCTRL_BYTE_WHEN_WAIT_CTRL_BYTE -22 // USING
 #define SIMPLEDPP_CRC_CHECK_ERROR -23
 
-// cast char * to byte *
-#ifndef byte
-#define byte char
+// cast char * to sdp_byte *
+#define CAST_CHAR_PTR_TO_BYTE_PTR(ptr) (sdp_byte *)(ptr)
+#ifndef sdp_byte
+#define sdp_byte char
 #endif
-#define CAST_CHAR_PTR_TO_BYTE_PTR(ptr) (byte *)(ptr)
-
 // SimpleDPP receive state machine's states
 #define SIMPLEDPP_REV_WAIT_START 0
 #define SIMPLEDPP_REV_WAIT_END 1
@@ -38,8 +38,8 @@ typedef int SimpleDPPERROR;
 class SimpleDPP
 {
 private:
-    std::vector<byte> sendBuffer;
-    std::vector<byte> revBuffer;
+    std::vector<sdp_byte> sendBuffer;
+    std::vector<sdp_byte> revBuffer;
     int SimpleDPPErrorCnt;
     int SimpleDPPRevState;
     constexpr static int SEND_START = 0;
@@ -72,9 +72,9 @@ private:
         }
     }
 
-    std::function<void(const std::vector<byte> &revdata)> RecvCallback = nullptr;
+    std::function<void(const std::vector<sdp_byte> &revdata)> RecvCallback = nullptr;
     std::function<void(SimpleDPPERROR error_code)> RevErrorCallback = nullptr;
-    std::function<void(const std::vector<byte> &senddata)> SendBuffer = nullptr;
+    std::function<void(const std::vector<sdp_byte> &senddata)> SendBuffer = nullptr;
 
 public:
     /**
@@ -85,9 +85,9 @@ public:
      * @param func T::func
      */
     template <class T>
-    void bindRecvCallback(T *obj, void (T::*func)(const std::vector<byte> &revdata))
+    void bindRecvCallback(T *obj, void (T::*func)(const std::vector<sdp_byte> &revdata))
     {
-        auto lambda = [obj, func](const std::vector<byte> &revdata)
+        auto lambda = [obj, func](const std::vector<sdp_byte> &revdata)
         { (obj->*func)(revdata); };
         RecvCallback = lambda;
     }
@@ -113,14 +113,14 @@ public:
      * @param func T::func
      */
     template <class T>
-    void bindSendBuffer(T *obj, void (T::*func)(const std::vector<byte> &senddata))
+    void bindSendBuffer(T *obj, void (T::*func)(const std::vector<sdp_byte> &senddata))
     {
-        auto lambda = [obj, func](const std::vector<byte> &senddata)
+        auto lambda = [obj, func](const std::vector<sdp_byte> &senddata)
         { (obj->*func)(senddata); };
         SendBuffer = lambda;
     }
 
-    void bindRecvCallback(std::function<void(const std::vector<byte> &revdata)> RecvCallback)
+    void bindRecvCallback(std::function<void(const std::vector<sdp_byte> &revdata)> RecvCallback)
     {
         this->RecvCallback = RecvCallback;
     }
@@ -130,7 +130,7 @@ public:
         this->RevErrorCallback = RevErrorCallback;
     }
 
-    void bindSendBuffer(std::function<void(const std::vector<byte> &senddata)> SendBuffer)
+    void bindSendBuffer(std::function<void(const std::vector<sdp_byte> &senddata)> SendBuffer)
     {
         this->SendBuffer = SendBuffer;
     }
@@ -145,7 +145,7 @@ public:
 
     ~SimpleDPP() {}
 
-    void parse(const byte *data, int len)
+    void parse(const sdp_byte *data, int len)
     {
         for (int i = 0; i < len; i++)
         {
@@ -153,7 +153,7 @@ public:
         }
     }
 
-    void parse(const std::vector<byte> &data)
+    void parse(const std::vector<sdp_byte> &data)
     {
         for (int i = 0; i < data.size(); i++)
         {
@@ -163,7 +163,7 @@ public:
     
     int getSimpleDPPErrorCnt() { return SimpleDPPErrorCnt; }
 
-    void parse(byte c)
+    void parse(sdp_byte c)
     {
         switch (SimpleDPPRevState)
         {
@@ -208,7 +208,7 @@ public:
         }
     }
 
-    int send(const byte *data, int len)
+    int send(const sdp_byte *data, int len)
     {
         int i;
         // 1. empty buffer
@@ -252,7 +252,7 @@ public:
     /**
      * @brief must be used between send_datas_start() and send_datas_add()
      */
-    void send_datas_add(const byte *data, int len)
+    void send_datas_add(const sdp_byte *data, int len)
     {
         for (int i = 0; i < len; i++)
         {
@@ -302,7 +302,7 @@ public:
         {
             return SIMPLEDPP_SENDFAILED;
         }
-        const byte *data = (const byte *)first;
+        const sdp_byte *data = (const sdp_byte *)first;
         int len = (int)second;
         switch (send_stage)
         {
@@ -319,7 +319,6 @@ public:
         }
         return send_datas(rest...); // 将会根据语法来递归调用
     }
-
 private:
     int send_datas(void)
     {
