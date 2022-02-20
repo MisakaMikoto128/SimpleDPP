@@ -25,3 +25,4 @@ gcc/simpledpptest
 gcc/SimpleDPP.layout
 gcc/Makefile.win
 *.class
+/src/simpledpptest
