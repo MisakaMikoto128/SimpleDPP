@@ -6,10 +6,10 @@
 typedef int SimpleDPPERROR;
 
 //cast char * to byte *
-#ifndef byte
-#define byte char
+#ifndef sdp_byte
+#define sdp_byte char
 #endif
-#define CAST_CHAR_PTR_TO_BYTE_PTR(ptr) (byte *)(ptr)
+#define CAST_CHAR_PTR_TO_BYTE_PTR(ptr) (sdp_byte *)(ptr)
 
 // define SimpleDPP receive error code
 // level 0:
@@ -73,7 +73,7 @@ public:
     }
     int getSimpleDPPErrorCnt(){return SimpleDPPErrorCnt;}
 
-    void parse(const byte* data,int len){
+    void parse(const sdp_byte* data,int len){
         for(int i = 0; i < len;i++){
             parse(data[i]);
         }
@@ -85,7 +85,7 @@ public:
         }
     }
 
-    void parse(byte c){
+    void parse(sdp_byte c){
         switch (SimpleDPPRevState)
         {
         case SIMPLEDPP_REV_WAIT_START:
@@ -130,7 +130,7 @@ public:
     }
 
 
-    int send(const byte *data, int len){
+    int send(const sdp_byte *data, int len){
         int i;
         //1. empty buffer
         sendBuffer.clear();
@@ -174,7 +174,7 @@ public:
     /**
      * @brief must be used between send_datas_start() and send_datas_add()
      */
-    void send_datas_add(const byte *data, int len)
+    void send_datas_add(const sdp_byte *data, int len)
     {
         for (int i = 0; i < len; i++)
         {
@@ -224,7 +224,7 @@ public:
         {
             return SIMPLEDPP_SENDFAILED;
         }
-        const byte *data = (const byte *)first;
+        const sdp_byte *data = (const sdp_byte *)first;
         int len = (int)second;
         switch (send_stage)
         {
