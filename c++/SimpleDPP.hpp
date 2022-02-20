@@ -152,6 +152,15 @@ public:
             parse(data[i]);
         }
     }
+
+    void parse(const std::vector<byte> &data)
+    {
+        for (int i = 0; i < data.size(); i++)
+        {
+            parse(data[i]);
+        }
+    }
+    
     int getSimpleDPPErrorCnt() { return SimpleDPPErrorCnt; }
 
     void parse(byte c)
