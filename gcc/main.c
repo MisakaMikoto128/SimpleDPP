@@ -3,12 +3,12 @@
 #include <string.h>
 #define SIMPLE_DPP_REV_BUFFER_SIZE 512
 #define SIMPLE_DPP_SEND_BUFFER_SIZE 512
-__implemented byte __send_data[SIMPLE_DPP_SEND_BUFFER_SIZE];
-__implemented byte __recv_data[SIMPLE_DPP_REV_BUFFER_SIZE];
+__implemented sdp_byte __send_data[SIMPLE_DPP_SEND_BUFFER_SIZE];
+__implemented sdp_byte __recv_data[SIMPLE_DPP_REV_BUFFER_SIZE];
 __implemented int send_capacity = SIMPLE_DPP_SEND_BUFFER_SIZE;
 __implemented int recv_capacity = SIMPLE_DPP_REV_BUFFER_SIZE;
 
-__implemented void SimpleDPPRecvCallback(const byte *data, int len)
+__implemented void SimpleDPPRecvCallback(const sdp_byte *data, int len)
 {
     printf("SimpleDPPRecvCallback------------------> \r\n");
     // print data
@@ -18,7 +18,7 @@ __implemented void SimpleDPPRecvCallback(const byte *data, int len)
         putchar(data[i]);
     }
 }
-__implemented byte SimpleDPP_putchar(byte c)
+__implemented sdp_byte SimpleDPP_putchar(sdp_byte c)
 {
     // putchar(c);
     SimpleDPP_parse(c);

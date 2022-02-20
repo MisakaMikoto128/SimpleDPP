@@ -6,10 +6,10 @@
 
 //cast char * to byte *
 //TODO : typedef conflict or macro pollution
-#ifndef byte
-#define byte unsigned char
+#ifndef sdp_byte
+#define sdp_byte unsigned char
 #endif
-#define CAST_CHAR_PTR_TO_BYTE_PTR(ptr) (byte *)(ptr)
+#define CAST_CHAR_PTR_TO_BYTE_PTR(ptr) (sdp_byte *)(ptr)
 
 typedef int SimpleDPPERROR;
 
@@ -49,19 +49,19 @@ typedef int SimpleDPPERROR;
 #define __implemented
 
 // Externally provided methods
-void SimpleDPP_init(byte *send_data, int send_capacity, byte *recv_data, int recv_capacity);
-int SimpleDPP_send(const byte *data, int len);
-int SimpleDPP_send_datas(int data_num,const byte *data, int data_len,...);
+void SimpleDPP_init(sdp_byte *send_data, int send_capacity, sdp_byte *recv_data, int recv_capacity);
+int SimpleDPP_send(const sdp_byte *data, int len);
+int SimpleDPP_send_datas(int data_num,const sdp_byte *data, int data_len,...);
 
 
 int send_datas_start();
-int send_datas_add(const byte *data, int len);
+int send_datas_add(const sdp_byte *data, int len);
 int send_datas_end();
 
-void SimpleDPP_parse(byte c);
+void SimpleDPP_parse(sdp_byte c);
 int getSimpleDPPErrorCnt();
-__unimplemented void SimpleDPPRecvCallback(const byte *data, int len);
+__unimplemented void SimpleDPPRecvCallback(const sdp_byte *data, int len);
 __unimplemented void SimpleDPPRevErrorCallback(SimpleDPPERROR error_code);
-__unimplemented byte SimpleDPP_putchar(byte c);
+__unimplemented sdp_byte SimpleDPP_putchar(sdp_byte c);
 
 #endif // _SIMPLE_DPP_H_

@@ -9,7 +9,7 @@ static int SimpleDPPErrorCnt;
 static int SimpleDPPRevState;
 // #define SimpleDPP_ESCAPE_CHAR_LEN 2
 // static char SimpleDPP_control_byte_buf[SimpleDPP_ESCAPE_CHAR_LEN] = {0};
-void SimpleDPP_init(byte *send_data, int send_capacity, byte *recv_data, int recv_capacity)
+void SimpleDPP_init(sdp_byte *send_data, int send_capacity, sdp_byte *recv_data, int recv_capacity)
 {
     byte_buffer_setmemory(&send_buffer, send_data, send_capacity);
     byte_buffer_setmemory(&recv_buffer, recv_data, recv_capacity);
@@ -48,7 +48,7 @@ int getSimpleDPPErrorCnt()
  *   success: The number of bytes actually sent
  * fail: SIMPLEDPP_SENDFAILED
  */
-int SimpleDPP_send(const byte *data, int len)
+int SimpleDPP_send(const sdp_byte *data, int len)
 {
     int i;
     //1. empty buffer
@@ -111,7 +111,7 @@ int send_datas_start()
  * @return success : the number of bytes in the current buffer
  * fail : SIMPLEDPP_SENDFAILED
  */
-int send_datas_add(const byte *data, int len)
+int send_datas_add(const sdp_byte *data, int len)
 {
     for (int i = 0; i < len; i++)
     {
@@ -162,7 +162,7 @@ int send_datas_end()
  * fail: SIMPLEDPP_SENDFAILED
  * @example SimpleDPP_send_datas(3,"data1",len1,"data2",len2,"data3",len3);
  */
-int SimpleDPP_send_datas(int data_num, const byte *data, int data_len, ...)
+int SimpleDPP_send_datas(int data_num, const sdp_byte *data, int data_len, ...)
 {
     va_list args;
     int i;
@@ -201,7 +201,7 @@ int SimpleDPP_send_datas(int data_num, const byte *data, int data_len, ...)
         {
             break;
         }
-        data = va_arg(args, const byte *);
+        data = va_arg(args, const sdp_byte *);
         data_len = va_arg(args, int);
     }
     va_end(args);
@@ -216,7 +216,7 @@ int SimpleDPP_send_datas(int data_num, const byte *data, int data_len, ...)
 }
 
 // SimpleDPP receive state machine's states
-void SimpleDPP_parse(byte c)
+void SimpleDPP_parse(sdp_byte c)
 {
     switch (SimpleDPPRevState)
     {

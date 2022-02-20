@@ -1,5 +1,5 @@
 #include "ByteBuffer.h"
-void byte_buffer_setmemory(pByteBuffer p,byte *data,int capacity){
+void byte_buffer_setmemory(pByteBuffer p,sdp_byte *data,int capacity){
     p->data = data;
     p->capacity = capacity;
     p->size = 0;
@@ -18,7 +18,7 @@ Return:
     success: 0
     fail: OVER_CAPACITY_ERROR
 */
-int byte_buffer_push(pByteBuffer p,byte c){
+int byte_buffer_push(pByteBuffer p,sdp_byte c){
     if(p->size < p->capacity){
         p->data[p->size++] = c;
         return 0;
@@ -31,7 +31,7 @@ Return:
     success: pushed data length
     fail: OVER_CAPACITY_ERROR
 */
-int byte_buffer_push_str(pByteBuffer p,byte *str){
+int byte_buffer_push_str(pByteBuffer p,sdp_byte *str){
     int i;
     for(i=0;str[i]!='\0';i++){
         if(byte_buffer_push(p,str[i])==OVER_CAPACITY_ERROR){
@@ -46,7 +46,7 @@ Return:
     success: pushed data length
     fail: OVER_CAPACITY_ERROR
 */
-int byte_buffer_push_data(pByteBuffer p,const byte *data,int len){
+int byte_buffer_push_data(pByteBuffer p,const sdp_byte *data,int len){
     int i;
     for(i=0;i<len;i++){
         if(byte_buffer_push(p,data[i])==OVER_CAPACITY_ERROR){

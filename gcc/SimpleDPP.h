@@ -10,10 +10,10 @@ support Arm Compiler 6/5,gcc/clang
 
 //cast char * to byte *
 //TODO : typedef conflict or macro pollution
-#ifndef byte
-#define byte unsigned char
+#ifndef sdp_byte
+#define sdp_byte unsigned char
 #endif
-#define CAST_CHAR_PTR_TO_BYTE_PTR(ptr) (byte *)(ptr)
+#define CAST_CHAR_PTR_TO_BYTE_PTR(ptr) (sdp_byte *)(ptr)
 
 // define SimpleDPP receive error code
 // level 0:
@@ -48,25 +48,25 @@ typedef int SimpleDPPERROR;
 //default buffer size
 #define SIMPLEDDP_DEFAULT_BUFFER_SIZE 1024
 
-// extern __attribute__((weak)) byte __send_data[SIMPLEDDP_DEFAULT_BUFFER_SIZE];
-// extern __attribute__((weak)) byte __recv_data[SIMPLEDDP_DEFAULT_BUFFER_SIZE];
+// extern __attribute__((weak)) sdp_byte __send_data[SIMPLEDDP_DEFAULT_BUFFER_SIZE];
+// extern __attribute__((weak)) sdp_byte __recv_data[SIMPLEDDP_DEFAULT_BUFFER_SIZE];
 
 // Externally provided methods
 void SimpleDPP_init(void);
 
-int SimpleDPP_send(const byte *data, int len);
-int __SimpleDPP_send_datas(const byte *data,int data_len,...);
+int SimpleDPP_send(const sdp_byte *data, int len);
+int __SimpleDPP_send_datas(const sdp_byte *data,int data_len,...);
 
 int send_datas_start();
-int send_datas_add(const byte *data, int len);
+int send_datas_add(const sdp_byte *data, int len);
 int send_datas_end();
 
 // Only works in C99    
 #define SimpleDPP_send_datas(van_arg,...) __SimpleDPP_send_datas(van_arg,##__VA_ARGS__,VAR_ARG_END)
-void SimpleDPP_parse(byte c);
+void SimpleDPP_parse(sdp_byte c);
 int getSimpleDPPErrorCnt();
-__unimplemented void SimpleDPPRecvCallback(const byte *data, int len);
+__unimplemented void SimpleDPPRecvCallback(const sdp_byte *data, int len);
 __unimplemented void SimpleDPPRevErrorCallback(SimpleDPPERROR error_code);
-__unimplemented byte SimpleDPP_putchar(byte c);
+__unimplemented sdp_byte SimpleDPP_putchar(sdp_byte c);
 
 #endif // _SIMPLE_DPP_H_

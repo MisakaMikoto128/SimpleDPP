@@ -8,8 +8,8 @@ static ByteBuffer recv_buffer;
 static int SimpleDPPErrorCnt;
 static int SimpleDPPRevState;
 
-__attribute__((weak)) byte __send_data[SIMPLEDDP_DEFAULT_BUFFER_SIZE]={0};
-__attribute__((weak)) byte __recv_data[SIMPLEDDP_DEFAULT_BUFFER_SIZE]={0};
+__attribute__((weak)) sdp_byte __send_data[SIMPLEDDP_DEFAULT_BUFFER_SIZE]={0};
+__attribute__((weak)) sdp_byte __recv_data[SIMPLEDDP_DEFAULT_BUFFER_SIZE]={0};
 __attribute__((weak)) int send_capacity = SIMPLEDDP_DEFAULT_BUFFER_SIZE;
 __attribute__((weak)) int recv_capacity = SIMPLEDDP_DEFAULT_BUFFER_SIZE;
 
@@ -55,7 +55,7 @@ Return:
     success: The number of bytes actually sent
     fail: SIMPLEDPP_SENDFAILED
 */
-int SimpleDPP_send(const byte *data, int len)
+int SimpleDPP_send(const sdp_byte *data, int len)
 {
     int i;
     //1. empty buffer
@@ -117,7 +117,7 @@ int send_datas_start()
  * @return success : the number of bytes in the current buffer
  * fail : SIMPLEDPP_SENDFAILED
      */
-int send_datas_add(const byte *data, int len)
+int send_datas_add(const sdp_byte *data, int len)
 {
     for (int i = 0; i < len; i++)
     {
@@ -168,7 +168,7 @@ int send_datas_end()
  * fail: SIMPLEDPP_SENDFAILED
  * @example __SimpleDPP_send_datas("data1",len1,"data2",len2,"data3",len3,...,VAR_ARG_END);
  */
-int __SimpleDPP_send_datas(const byte *data, int data_len, ...)
+int __SimpleDPP_send_datas(const sdp_byte *data, int data_len, ...)
 {
     va_list args;
     int i;
@@ -203,7 +203,7 @@ int __SimpleDPP_send_datas(const byte *data, int data_len, ...)
                 }
             }
         }
-        data = va_arg(args, const byte *);
+        data = va_arg(args, const sdp_byte *);
         if (data == VAR_ARG_END)
         {
             break;
@@ -222,7 +222,7 @@ int __SimpleDPP_send_datas(const byte *data, int data_len, ...)
 }
 
 // SimpleDPP receive state machine's states
-void SimpleDPP_parse(byte c)
+void SimpleDPP_parse(sdp_byte c)
 {
     switch (SimpleDPPRevState)
     {
@@ -273,11 +273,11 @@ void SimpleDPP_parse(byte c)
     }
 }
 
-__attribute__((weak)) void SimpleDPPRecvCallback(const byte *data, int len)
+__attribute__((weak)) void SimpleDPPRecvCallback(const sdp_byte *data, int len)
 {
     __unimplemented
 }
-__attribute__((weak)) byte SimpleDPP_putchar(byte c)
+__attribute__((weak)) sdp_byte SimpleDPP_putchar(sdp_byte c)
 {
     __unimplemented return c;
 }

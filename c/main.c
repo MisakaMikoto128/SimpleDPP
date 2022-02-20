@@ -2,10 +2,10 @@
 #include <stdio.h>
 #include <string.h>
 #define BUFFER_SIZE 1024
-__implemented byte send_data[BUFFER_SIZE];
-__implemented byte recv_data[BUFFER_SIZE];
+__implemented sdp_byte send_data[BUFFER_SIZE];
+__implemented sdp_byte recv_data[BUFFER_SIZE];
 
-__implemented void SimpleDPPRecvCallback(const byte *data, int len)
+__implemented void SimpleDPPRecvCallback(const sdp_byte *data, int len)
 {
     printf("SimpleDPPRecvCallback------------------> \r\n");
     // print data
@@ -15,7 +15,7 @@ __implemented void SimpleDPPRecvCallback(const byte *data, int len)
         putchar(data[i]);
     }
 }
-__implemented byte SimpleDPP_putchar(byte c)
+__implemented sdp_byte SimpleDPP_putchar(sdp_byte c)
 {
     // putchar(c);
     SimpleDPP_parse(c);
