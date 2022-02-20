@@ -6,7 +6,9 @@
 typedef int SimpleDPPERROR;
 
 //cast char * to byte *
+#ifndef byte
 #define byte char
+#endif
 #define CAST_CHAR_PTR_TO_BYTE_PTR(ptr) (byte *)(ptr)
 
 // define SimpleDPP receive error code

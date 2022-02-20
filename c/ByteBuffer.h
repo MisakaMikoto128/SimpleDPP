@@ -6,7 +6,9 @@ extern "C" {
 #include <stdbool.h>
 #include <stddef.h>
 #define OVER_CAPACITY_ERROR -1
+#ifndef byte
 #define byte unsigned char
+#endif
 
 
 typedef struct _ByteBuffer {

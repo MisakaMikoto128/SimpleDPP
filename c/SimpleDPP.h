@@ -6,7 +6,9 @@
 
 //cast char * to byte *
 //TODO : typedef conflict or macro pollution
+#ifndef byte
 #define byte unsigned char
+#endif
 #define CAST_CHAR_PTR_TO_BYTE_PTR(ptr) (byte *)(ptr)
 
 typedef int SimpleDPPERROR;

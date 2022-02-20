@@ -18,7 +18,9 @@
 #define SIMPLEDPP_CRC_CHECK_ERROR -23
 
 // cast char * to byte *
+#ifndef byte
 #define byte char
+#endif
 #define CAST_CHAR_PTR_TO_BYTE_PTR(ptr) (byte *)(ptr)
 
 // SimpleDPP receive state machine's states

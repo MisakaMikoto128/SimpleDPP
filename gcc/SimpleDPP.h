@@ -10,7 +10,9 @@ support Arm Compiler 6/5,gcc/clang
 
 //cast char * to byte *
 //TODO : typedef conflict or macro pollution
+#ifndef byte
 #define byte unsigned char
+#endif
 #define CAST_CHAR_PTR_TO_BYTE_PTR(ptr) (byte *)(ptr)
 
 // define SimpleDPP receive error code

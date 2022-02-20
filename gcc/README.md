@@ -1,0 +1,1 @@
+需要支持C99及GCC拓展属性__attribute__((weak)) 的编译器。
