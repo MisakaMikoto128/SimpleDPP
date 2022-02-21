@@ -1,53 +1,56 @@
 #include "SimpleDPP.h"
 
-static void SimpleDPP_send_buffer();
-static void SimpleDPPRecvInnerCallback();
-static void SimpleDPPRevErrorInnerCallback(SimpleDPPERROR error_code);
-static ByteBuffer send_buffer;
-static ByteBuffer recv_buffer;
-static int SimpleDPPErrorCnt;
-static int SimpleDPPRevState;
-
-__attribute__((weak)) sdp_byte __send_data[SIMPLEDDP_DEFAULT_BUFFER_SIZE]={0};
-__attribute__((weak)) sdp_byte __recv_data[SIMPLEDDP_DEFAULT_BUFFER_SIZE]={0};
-__attribute__((weak)) int send_capacity = SIMPLEDDP_DEFAULT_BUFFER_SIZE;
-__attribute__((weak)) int recv_capacity = SIMPLEDDP_DEFAULT_BUFFER_SIZE;
+static void SimpleDPP_send_buffer(SimpleDPP* sdp);
+static void SimpleDPPRecvInnerCallback(SimpleDPP* sdp);
+static void SimpleDPPRevErrorInnerCallback(SimpleDPP* sdp,SimpleDPPERROR error_code);
 
 // #define SimpleDPP_ESCAPE_CHAR_LEN 2
 // static char SimpleDPP_control_byte_buf[SimpleDPP_ESCAPE_CHAR_LEN] = {0};
-void SimpleDPP_init()
+void SimpleDPP_Constructor(SimpleDPP* sdp,sdp_byte *send_buffer,int send_buffer_capacity,sdp_byte *recv_buffer,int recv_buffer_capacity,SimpleDPPRecvCallback_t SimpleDPPRecvCallback,SimpleDPPRevErrorCallback_t SimpleDPPRevErrorCallback,SimpleDPP_putchar_t SimpleDPP_putchar)
 {
-    byte_buffer_setmemory(&send_buffer, __send_data, send_capacity);
-    byte_buffer_setmemory(&recv_buffer, __recv_data, recv_capacity);
-    SimpleDPPErrorCnt = 0;
-    SimpleDPPRevState = SIMPLEDPP_REV_WAIT_START;
+    byte_buffer_setmemory(&sdp->send_buffer, send_buffer, send_buffer_capacity);
+    byte_buffer_setmemory(&sdp->recv_buffer, recv_buffer, recv_buffer_capacity);
+    sdp->SimpleDPPErrorCnt = 0;
+    sdp->SimpleDPPRevState = SIMPLEDPP_REV_WAIT_START;
+    sdp->SimpleDPPRecvCallback = SimpleDPPRecvCallback;
+    sdp->SimpleDPPRevErrorCallback = SimpleDPPRevErrorCallback;
+    sdp->SimpleDPP_putchar = SimpleDPP_putchar;
 }
 
-static void SimpleDPP_send_buffer()
+static void SimpleDPP_send_buffer(SimpleDPP* sdp)
 {
     int i;
-    for (i = 0; i < send_buffer.size; i++)
+    if(sdp->SimpleDPP_putchar != NULL)
     {
-        SimpleDPP_putchar(send_buffer.data[i]);
+       for (i = 0; i < sdp->send_buffer.size; i++)
+        {
+            sdp->SimpleDPP_putchar(sdp->send_buffer.data[i]);
+        } 
     }
 }
 
-static void SimpleDPPRecvInnerCallback()
+static void SimpleDPPRecvInnerCallback(SimpleDPP* sdp)
 {
-    SimpleDPPRecvCallback(recv_buffer.data, recv_buffer.size);
-    byte_buffer_clear(&recv_buffer);
+    if(sdp->SimpleDPPRecvCallback != NULL)
+    {
+        sdp->SimpleDPPRecvCallback(sdp->recv_buffer.data,sdp->recv_buffer.size);
+    }
+    byte_buffer_clear(&sdp->recv_buffer);
 }
 
-static void SimpleDPPRevErrorInnerCallback(SimpleDPPERROR error_code)
+static void SimpleDPPRevErrorInnerCallback(SimpleDPP* sdp,SimpleDPPERROR error_code)
 {
-    SimpleDPPRevErrorCallback(error_code);
-    byte_buffer_clear(&recv_buffer);
-    SimpleDPPErrorCnt++;
+    if(sdp->SimpleDPPRevErrorCallback != NULL)
+    {
+        sdp->SimpleDPPRevErrorCallback(error_code);
+    }
+    byte_buffer_clear(&sdp->recv_buffer);
+    sdp->SimpleDPPErrorCnt++;
 }
 
-int getSimpleDPPErrorCnt()
+int getSimpleDPPErrorCnt(SimpleDPP* sdp)
 {
-    return SimpleDPPErrorCnt;
+    return sdp->SimpleDPPErrorCnt;
 }
 
 /*
@@ -55,43 +58,43 @@ Return:
     success: The number of bytes actually sent
     fail: SIMPLEDPP_SENDFAILED
 */
-int SimpleDPP_send(const sdp_byte *data, int len)
+int SimpleDPP_send(SimpleDPP* sdp,const sdp_byte *data, int len)
 {
     int i;
     //1. empty buffer
-    byte_buffer_clear(&send_buffer);
+    byte_buffer_clear(&sdp->send_buffer);
     //2. push SHO
-    byte_buffer_push(&send_buffer, SOH);
+    byte_buffer_push(&sdp->send_buffer, SOH);
     for (i = 0; i < len; i++)
     {
         //3. push message body,when encounter SOH,EOT or ESC,using ESC escape it.
         if (containSimpleDPPCtrolByte(data[i]))
         {
             // escaped control byte only 2 bytes
-            if (byte_buffer_push(&send_buffer, ESC) == OVER_CAPACITY_ERROR)
+            if (byte_buffer_push(&sdp->send_buffer, ESC) == OVER_CAPACITY_ERROR)
             {
                 return SIMPLEDPP_SENDFAILED;
             }
-            if (byte_buffer_push(&send_buffer, data[i]) == OVER_CAPACITY_ERROR)
+            if (byte_buffer_push(&sdp->send_buffer, data[i]) == OVER_CAPACITY_ERROR)
             {
                 return SIMPLEDPP_SENDFAILED;
             }
         }
         else
         {
-            if (byte_buffer_push(&send_buffer, data[i]) == OVER_CAPACITY_ERROR)
+            if (byte_buffer_push(&sdp->send_buffer, data[i]) == OVER_CAPACITY_ERROR)
             {
                 return SIMPLEDPP_SENDFAILED;
             }
         }
     }
     //4. push EOT
-    if (byte_buffer_push(&send_buffer, EOT) == OVER_CAPACITY_ERROR)
+    if (byte_buffer_push(&sdp->send_buffer, EOT) == OVER_CAPACITY_ERROR)
     {
         return SIMPLEDPP_SENDFAILED;
     }
     //5. send message
-    SimpleDPP_send_buffer();
+    SimpleDPP_send_buffer(sdp);
     return len;
 }
 
@@ -100,16 +103,16 @@ int SimpleDPP_send(const sdp_byte *data, int len)
  * @return success : the number of bytes in the current buffer
  * fail : SIMPLEDPP_SENDFAILED
  */
-int send_datas_start()
+int send_datas_start(SimpleDPP* sdp)
 {
     //1. empty buffer
-    byte_buffer_clear(&send_buffer);
+    byte_buffer_clear(&sdp->send_buffer);
     //2. push SHO
-    if (byte_buffer_push(&send_buffer, SOH) == OVER_CAPACITY_ERROR)
+    if (byte_buffer_push(&sdp->send_buffer, SOH) == OVER_CAPACITY_ERROR)
     {
         return SIMPLEDPP_SENDFAILED;
     }
-    return byte_buffer_size(&send_buffer);
+    return byte_buffer_size(&sdp->send_buffer);
 }
 
 /**
@@ -117,7 +120,7 @@ int send_datas_start()
  * @return success : the number of bytes in the current buffer
  * fail : SIMPLEDPP_SENDFAILED
      */
-int send_datas_add(const sdp_byte *data, int len)
+int send_datas_add(SimpleDPP* sdp,const sdp_byte *data, int len)
 {
     for (int i = 0; i < len; i++)
     {
@@ -125,24 +128,24 @@ int send_datas_add(const sdp_byte *data, int len)
         if (containSimpleDPPCtrolByte(data[i]))
         {
             // escaped control byte only 2 bytes
-            if (byte_buffer_push(&send_buffer, ESC) == OVER_CAPACITY_ERROR)
+            if (byte_buffer_push(&sdp->send_buffer, ESC) == OVER_CAPACITY_ERROR)
             {
                 return SIMPLEDPP_SENDFAILED;
             }
-            if (byte_buffer_push(&send_buffer, data[i]) == OVER_CAPACITY_ERROR)
+            if (byte_buffer_push(&sdp->send_buffer, data[i]) == OVER_CAPACITY_ERROR)
             {
                 return SIMPLEDPP_SENDFAILED;
             }
         }
         else
         {
-            if (byte_buffer_push(&send_buffer, data[i]) == OVER_CAPACITY_ERROR)
+            if (byte_buffer_push(&sdp->send_buffer, data[i]) == OVER_CAPACITY_ERROR)
             {
                 return SIMPLEDPP_SENDFAILED;
             }
         }
     }
-    return byte_buffer_size(&send_buffer);
+    return byte_buffer_size(&sdp->send_buffer);
 }
 
 /**
@@ -150,16 +153,16 @@ int send_datas_add(const sdp_byte *data, int len)
  * @return success : the number of bytes in the current buffer
  * fail : SIMPLEDPP_SENDFAILED
  */
-int send_datas_end()
+int send_datas_end(SimpleDPP* sdp)
 {
     //4. push EOT
-    if (byte_buffer_push(&send_buffer, EOT) == OVER_CAPACITY_ERROR)
+    if (byte_buffer_push(&sdp->send_buffer, EOT) == OVER_CAPACITY_ERROR)
     {
         return SIMPLEDPP_SENDFAILED;
     }
     //5. send message
-    SimpleDPP_send_buffer();
-    return byte_buffer_size(&send_buffer);
+    SimpleDPP_send_buffer(sdp);
+    return byte_buffer_size(&sdp->send_buffer);
 }
 
 /**
@@ -168,14 +171,14 @@ int send_datas_end()
  * fail: SIMPLEDPP_SENDFAILED
  * @example __SimpleDPP_send_datas("data1",len1,"data2",len2,"data3",len3,...,VAR_ARG_END);
  */
-int __SimpleDPP_send_datas(const sdp_byte *data, int data_len, ...)
+int __SimpleDPP_send_datas(SimpleDPP* sdp,const sdp_byte *data, int data_len, ...)
 {
     va_list args;
     int i;
     //1. empty buffer
-    byte_buffer_clear(&send_buffer);
+    byte_buffer_clear(&sdp->send_buffer);
     //2. push SHO
-    byte_buffer_push(&send_buffer, SOH);
+    byte_buffer_push(&sdp->send_buffer, SOH);
     //3. push message body,when encounter SOH,EOT or ESC,using ESC escape it.
     va_start(args, data_len);
     while (true)
@@ -186,18 +189,18 @@ int __SimpleDPP_send_datas(const sdp_byte *data, int data_len, ...)
             if (containSimpleDPPCtrolByte(data[i]))
             {
                 // escaped control byte only 2 bytes
-                if (byte_buffer_push(&send_buffer, ESC) == OVER_CAPACITY_ERROR)
+                if (byte_buffer_push(&sdp->send_buffer, ESC) == OVER_CAPACITY_ERROR)
                 {
                     return SIMPLEDPP_SENDFAILED;
                 }
-                if (byte_buffer_push(&send_buffer, data[i]) == OVER_CAPACITY_ERROR)
+                if (byte_buffer_push(&sdp->send_buffer, data[i]) == OVER_CAPACITY_ERROR)
                 {
                     return SIMPLEDPP_SENDFAILED;
                 }
             }
             else
             {
-                if (byte_buffer_push(&send_buffer, data[i]) == OVER_CAPACITY_ERROR)
+                if (byte_buffer_push(&sdp->send_buffer, data[i]) == OVER_CAPACITY_ERROR)
                 {
                     return SIMPLEDPP_SENDFAILED;
                 }
@@ -212,44 +215,44 @@ int __SimpleDPP_send_datas(const sdp_byte *data, int data_len, ...)
     }
     va_end(args);
     //4. push EOT
-    if (byte_buffer_push(&send_buffer, EOT) == OVER_CAPACITY_ERROR)
+    if (byte_buffer_push(&sdp->send_buffer, EOT) == OVER_CAPACITY_ERROR)
     {
         return SIMPLEDPP_SENDFAILED;
     }
     //5. send message
-    SimpleDPP_send_buffer();
-    return byte_buffer_size(&send_buffer);
+    SimpleDPP_send_buffer(sdp);
+    return byte_buffer_size(&sdp->send_buffer);
 }
 
 // SimpleDPP receive state machine's states
-void SimpleDPP_parse(sdp_byte c)
+void SimpleDPP_parse(SimpleDPP* sdp,sdp_byte c)
 {
-    switch (SimpleDPPRevState)
+    switch (sdp->SimpleDPPRevState)
     {
     case SIMPLEDPP_REV_WAIT_START:
         if (c == SOH)
         {
-            SimpleDPPRevState = SIMPLEDPP_REV_WAIT_END;
+            sdp->SimpleDPPRevState = SIMPLEDPP_REV_WAIT_END;
         }
         break;
     case SIMPLEDPP_REV_WAIT_END:
         switch (c)
         {
         case SOH:
-            SimpleDPPRevState = SIMPLEDPP_REV_WAIT_START;
-            SimpleDPPRevErrorInnerCallback(SIMPLEDPP_ERROR_REV_SOH_WHEN_WAIT_END);
+            sdp->SimpleDPPRevState = SIMPLEDPP_REV_WAIT_START;
+            SimpleDPPRevErrorInnerCallback(sdp,SIMPLEDPP_ERROR_REV_SOH_WHEN_WAIT_END);
             break;
         case EOT:
-            SimpleDPPRevState = SIMPLEDPP_REV_WAIT_START;
-            SimpleDPPRecvInnerCallback();
+            sdp->SimpleDPPRevState = SIMPLEDPP_REV_WAIT_START;
+            SimpleDPPRecvInnerCallback(sdp);
             break;
         case ESC:
-            SimpleDPPRevState = SIMPLEDPP_REV_WAIT_CTRL_BYTE;
+            sdp->SimpleDPPRevState = SIMPLEDPP_REV_WAIT_CTRL_BYTE;
             break;
         default:
-            if (byte_buffer_push(&recv_buffer, c) == OVER_CAPACITY_ERROR)
+            if (byte_buffer_push(&sdp->recv_buffer, c) == OVER_CAPACITY_ERROR)
             {
-                SimpleDPPRevErrorInnerCallback(SIMPLEDPP_ERROR_REV_OVER_CAPACITY);
+                SimpleDPPRevErrorInnerCallback(sdp,SIMPLEDPP_ERROR_REV_OVER_CAPACITY);
             }
             break;
         }
@@ -257,42 +260,17 @@ void SimpleDPP_parse(sdp_byte c)
     case SIMPLEDPP_REV_WAIT_CTRL_BYTE:
         if (containSimpleDPPCtrolByte(c))
         {
-            if (byte_buffer_push(&recv_buffer, c) == OVER_CAPACITY_ERROR)
+            if (byte_buffer_push(&sdp->recv_buffer, c) == OVER_CAPACITY_ERROR)
             {
-                SimpleDPPRevErrorInnerCallback(SIMPLEDPP_ERROR_REV_OVER_CAPACITY);
+                SimpleDPPRevErrorInnerCallback(sdp,SIMPLEDPP_ERROR_REV_OVER_CAPACITY);
             }
-            SimpleDPPRevState = SIMPLEDPP_REV_WAIT_END;
+            sdp->SimpleDPPRevState = SIMPLEDPP_REV_WAIT_END;
         }
         else
         {
-            SimpleDPPRevErrorInnerCallback(SIMPLEDPP_ERROR_REV_NONCTRL_BYTE_WHEN_WAIT_CTRL_BYTE);
+            SimpleDPPRevErrorInnerCallback(sdp,SIMPLEDPP_ERROR_REV_NONCTRL_BYTE_WHEN_WAIT_CTRL_BYTE);
         }
         break;
-    default:
-        break;
-    }
-}
-
-__attribute__((weak)) void SimpleDPPRecvCallback(const sdp_byte *data, int len)
-{
-    __unimplemented
-}
-__attribute__((weak)) sdp_byte SimpleDPP_putchar(sdp_byte c)
-{
-    __unimplemented return c;
-}
-
-__attribute__((weak)) void SimpleDPPRevErrorCallback(SimpleDPPERROR error_code)
-{
-    __unimplemented switch (error_code)
-    {
-    case SIMPLEDPP_ERROR_REV_SOH_WHEN_WAIT_END:
-        break;
-    case SIMPLEDPP_ERROR_REV_OVER_CAPACITY:
-        break;
-    case SIMPLEDPP_ERROR_REV_NONCTRL_BYTE_WHEN_WAIT_CTRL_BYTE:
-        break;
-
     default:
         break;
     }
