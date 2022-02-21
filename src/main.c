@@ -32,7 +32,12 @@ int main(void)
 {
 
     //1. Init Simple DPP data buffer and callback,if you don't want to use callback,you can set callback to NULL.
-    SimpleDPP_Constructor(&sdp, __send_data, SIMPLE_DPP_SEND_BUFFER_SIZE, __recv_data, SIMPLE_DPP_REV_BUFFER_SIZE, SimpleDPPRecvCallback, SimpleDPPRevErrorCallback, SimpleDPP_putchar);
+    SimpleDPP_Constructor(&sdp, 
+    __send_data, SIMPLE_DPP_SEND_BUFFER_SIZE, 
+    __recv_data, SIMPLE_DPP_REV_BUFFER_SIZE, 
+    SimpleDPPRecvCallback,
+    SimpleDPPRevErrorCallback, 
+    SimpleDPP_putchar);
     
     //2. send and parse one msg,msg cnn be type of char * or byte *
     char *msg = "hello worl@\\00\r\n000d";
