@@ -189,6 +189,7 @@ classdef SimpleDPP < handle
                 len = obj.recv_buffer.length;
                 datas = obj.recv_buffer.buf(1:len);
                 obj.SimpleDPPRecvhandle(datas);
+                obj.recv_buffer.clear();
             end
         end
         
