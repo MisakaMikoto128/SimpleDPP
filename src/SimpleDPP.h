@@ -3,10 +3,13 @@
 #include "ByteBuffer.h"
 #include <stdarg.h>
 #include <stddef.h>
-
+#include <stdbool.h>
+#include <stdint.h>
+#include "SimpleDPP_port.h"
 /*C compiler standard support*/
 //#define SIMPLEDPP_SUPPORT_C89
 #define SIMPLEDPP_SUPPORT_C99
+#define SIMPLEDPP_VERSION "1.1.0"
 
 #define VAR_ARG_END ((void *)0)
 
@@ -28,7 +31,9 @@
 // level 2:
 #define SIMPLEDPP_ERROR_REV_SOH_WHEN_WAIT_END -21 //USING
 #define SIMPLEDPP_ERROR_REV_NONCTRL_BYTE_WHEN_WAIT_CTRL_BYTE -22 //USING
-#define SIMPLEDPP_CRC_CHECK_ERROR -23 
+#define SIMPLEDPP_CRC_CHECK_ERROR -23
+ 
+#define SIMPLEDPP_TIMEOUT -24 //USING
 
 // SimpleDPP receive state machine's states
 #define SIMPLEDPP_REV_WAIT_START 0
@@ -48,6 +53,7 @@ typedef int SimpleDPPERROR;
 
 //default buffer size
 #define SIMPLEDDP_DEFAULT_BUFFER_SIZE 1024
+#define SIMPLEDDP_DEFAULT_FRAME_REV_TIMEOUT 500 //ms
 
 typedef  void (*SimpleDPPRecvCallback_t)(const sdp_byte *data, int len);
 typedef  void (*SimpleDPPRevErrorCallback_t)(SimpleDPPERROR error_code);
@@ -62,6 +68,10 @@ typedef struct SimpleDPP_ {
     SimpleDPPRecvCallback_t SimpleDPPRecvCallback;
     SimpleDPPRevErrorCallback_t SimpleDPPRevErrorCallback;
     SimpleDPP_putchar_t SimpleDPP_putchar;
+
+    
+    uint32_t SimpleDPPFrameRevTimeout;
+    uint32_t SimpleDPPFrameRevStartTick;
 } SimpleDPP,*pSimpleDPP;
 
 
@@ -85,7 +95,8 @@ int __SimpleDPP_send_datas_n(SimpleDPP* sdp,int arg_num,const sdp_byte *data,int
 
 
 void SimpleDPP_parse(SimpleDPP* sdp,sdp_byte c);
-
-
 int getSimpleDPPErrorCnt(SimpleDPP* sdp);
+
+bool SimpleDPP_isTimeout(uint32_t start,uint32_t timeout);
+void SimpeDPP_poll(SimpleDPP* sdp);
 #endif // _SIMPLE_DPP_H_

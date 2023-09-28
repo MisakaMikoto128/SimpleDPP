@@ -15,6 +15,8 @@ void SimpleDPP_Constructor(SimpleDPP* sdp,sdp_byte *send_buffer,int send_buffer_
     sdp->SimpleDPPRecvCallback = SimpleDPPRecvCallback;
     sdp->SimpleDPPRevErrorCallback = SimpleDPPRevErrorCallback;
     sdp->SimpleDPP_putchar = SimpleDPP_putchar;
+    sdp->SimpleDPPFrameRevTimeout = SIMPLEDDP_DEFAULT_FRAME_REV_TIMEOUT;
+    sdp->SimpleDPPFrameRevStartTick = 0;
 }
 
 static void SimpleDPP_send_buffer(SimpleDPP* sdp)
@@ -233,6 +235,7 @@ void SimpleDPP_parse(SimpleDPP* sdp,sdp_byte c)
         if (c == SOH)
         {
             sdp->SimpleDPPRevState = SIMPLEDPP_REV_WAIT_END;
+            sdp->SimpleDPPFrameRevStartTick = SimpleDPP_getMsTick();
         }
         break;
     case SIMPLEDPP_REV_WAIT_END:
@@ -273,5 +276,26 @@ void SimpleDPP_parse(SimpleDPP* sdp,sdp_byte c)
         break;
     default:
         break;
+    }
+}
+
+bool SimpleDPP_isTimeout(uint32_t start,uint32_t timeout)
+{
+    return SimpleDPP_getMsTick() - start > timeout;
+}
+
+/**
+ * @brief SimpleDPP轮询函数，只是为一个Tick周期轮询一次，确保超时时间准确性。该方法和@SimpleDPP_parse方法
+ * 应当在一个线程中调用，因为使用到了SimpleDPP::SimpleDPPRevState变量,且两个线程对该变量都进行读写操作。
+ * 最好使用上层提高的线程安全方法读取数据，然后在一个线程中调用@SimpleDPP_parse方法。
+ * 
+ * @param sdp 
+ */
+void SimpeDPP_poll(SimpleDPP* sdp)
+{
+    if (sdp->SimpleDPPRevState != SIMPLEDPP_REV_WAIT_START && SimpleDPP_isTimeout(sdp->SimpleDPPFrameRevStartTick,sdp->SimpleDPPFrameRevTimeout))
+    {
+        SimpleDPPRevErrorInnerCallback(sdp,SIMPLEDPP_TIMEOUT);
+        sdp->SimpleDPPRevState = SIMPLEDPP_REV_WAIT_START;
     }
 }
