@@ -1,32 +1,42 @@
 #include "SimpleDPP.h"
 #include <stdio.h>
 #include <string.h>
+
 #define SIMPLE_DPP_REV_BUFFER_SIZE 512
 #define SIMPLE_DPP_SEND_BUFFER_SIZE 512
 __implemented sdp_byte __send_data[SIMPLE_DPP_SEND_BUFFER_SIZE];
 __implemented sdp_byte __recv_data[SIMPLE_DPP_REV_BUFFER_SIZE];
-SimpleDPP sdp;
 
 __implemented void SimpleDPPRecvCallback(const sdp_byte *data, int len)
 {
-    printf("SimpleDPPRecvCallback------------------> \r\n");
-    // print data
-    int i = 0;
-    for (i; i < len; i++)
-    {
-        putchar(data[i]);
-    }
+    printf("recv frame data:%s\n", data);
 }
-__implemented sdp_byte SimpleDPP_putchar(sdp_byte c)
+
+__implemented uint32_t SimpleDPP_write(const void *buf, unsigned int len)
 {
-    // putchar(c);
-    SimpleDPP_parse(&sdp, c);
-    return c;
+
+    return 0;
+}
+
+__implemented uint32_t SimpleDPP_read(void *buf, unsigned int len)
+{
+
+    return 0;
 }
 
 __implemented void SimpleDPPRevErrorCallback(SimpleDPPERROR error_code)
 {
 }
+
+SimpleDPP sdp;
+static SimpleDPPAdapter_t adapter = {
+    .write = SimpleDPP_write,
+    .read = SimpleDPP_read,
+    .debug = NULL,
+    .error = NULL,
+    .lock = NULL,
+    .unlock = NULL,
+};
 
 int main(void)
 {
@@ -37,7 +47,7 @@ int main(void)
                           __recv_data, SIMPLE_DPP_REV_BUFFER_SIZE,
                           SimpleDPPRecvCallback,
                           SimpleDPPRevErrorCallback,
-                          SimpleDPP_putchar);
+                          &adapter);
 
     // 2. send and parse one msg,msg cnn be type of char * or byte *
     char *msg = "hello worl@\\00\r\n000d";

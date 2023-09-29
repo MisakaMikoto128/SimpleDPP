@@ -1,11 +1,13 @@
 #ifndef _SIMPLE_DPP_H_
 #define _SIMPLE_DPP_H_
 #include "ByteBuffer.h"
+#include "SimpleDPP_port.h"
+
 #include <stdarg.h>
 #include <stddef.h>
 #include <stdbool.h>
 #include <stdint.h>
-#include "SimpleDPP_port.h"
+
 /*C compiler standard support*/
 // #define SIMPLEDPP_SUPPORT_C89
 #define SIMPLEDPP_SUPPORT_C99
@@ -70,7 +72,7 @@ typedef struct tagSimpleDPPAdapter
     // Data read operation (non-blocking)
     unsigned int (*read)(void *buf, unsigned int len);
     // AT error event ( if not required, fill in NULL)
-    void (*error)(at_response_t *);
+    void (*error)(void *);
     // Log output interface, which can print the complete AT interaction process, fill in NULL if not required.
     void (*debug)(const char *fmt, ...);
 } SimpleDPPAdapter_t;
@@ -84,8 +86,6 @@ typedef struct SimpleDPP_
     int SimpleDPPRevState;
     SimpleDPPRecvCallback_t SimpleDPPRecvCallback;
     SimpleDPPRevErrorCallback_t SimpleDPPRevErrorCallback;
-    // 如果设置为NULL，则表示不使用该方法写数据。
-    SimpleDPP_putchar_t SimpleDPP_putchar;
 
     uint32_t SimpleDPPFrameRevTimeout;
     uint32_t SimpleDPPFrameRevStartTick;
@@ -114,4 +114,8 @@ int getSimpleDPPErrorCnt(SimpleDPP *sdp);
 
 bool SimpleDPP_isTimeout(uint32_t start, uint32_t timeout);
 void SimpeDPP_poll(SimpleDPP *sdp);
+static inline uint32_t SimpleDPP_getRecvBufSize(SimpleDPP *sdp)
+{
+    return sdp->recv_buffer.size;
+}
 #endif // _SIMPLE_DPP_H_

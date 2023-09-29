@@ -16,7 +16,6 @@ void SimpleDPP_Constructor(SimpleDPP *sdp, sdp_byte *send_buffer, int send_buffe
     sdp->SimpleDPPRevErrorCallback = SimpleDPPRevErrorCallback;
     sdp->SimpleDPPFrameRevTimeout = SIMPLEDDP_DEFAULT_FRAME_REV_TIMEOUT;
     sdp->SimpleDPPFrameRevStartTick = 0;
-
     sdp->adapter = adapter;
 }
 
