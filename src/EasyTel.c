@@ -65,7 +65,7 @@ static __implemented void SimpleDPPRecvCallback(void *obj, const sdp_byte *data,
     {
         // 3.1 广播地址，直接调用回调函数处理
         EasyTelRevInnerCallback(etp, &etp->curr_rev_msg);
-        SDP_DEBUG(sdp, "[SDP] Recv broadcast message from %#x, len: %d, data: %s\n", src, data_len, etp->curr_rev_msg.data);
+        SDP_DEBUG(sdp, "[SDP] Recv broadcast message from %#x, len: %d, seq:%#x, data: %s\n", src, data_len, seq, etp->curr_rev_msg.data);
     }
     else if (dst == etp->addr)
     {
@@ -80,9 +80,9 @@ static __implemented void SimpleDPPRecvCallback(void *obj, const sdp_byte *data,
             ack_msg.type = ETP_MSG_TYPE_ACK;
             ack_msg.len = 0;
             ack_msg.crc = EasyTel_obj_get_msg_crc(&ack_msg);
-            SDP_DEBUG(sdp, "[SDP] Recv message from %#x, len: %d, data: %s\n", src, data_len, etp->curr_rev_msg.data);
+            SDP_DEBUG(sdp, "[SDP] Recv message from %#x, len: %d, seq:%#x,data: %s\n", src, data_len, seq, etp->curr_rev_msg.data);
             EsayTel_obj_write(etp, &ack_msg);
-            SDP_DEBUG(sdp, "[SDP] Send ACK to %#x\n", src);
+            SDP_DEBUG(sdp, "[SDP] Send ACK to %#x seq:%#x\n", src, ack_msg.seq);
             EasyTelRevInnerCallback(etp, &etp->curr_rev_msg);
         }
         else if (type == ETP_MSG_TYPE_ACK)
@@ -94,7 +94,7 @@ static __implemented void SimpleDPPRecvCallback(void *obj, const sdp_byte *data,
                 {
                     etp->is_writeable = true;
                     etp->is_writing = false;
-                    SDP_DEBUG(sdp, "[SDP] Recv ACK from %#x\n", src);
+                    SDP_DEBUG(sdp, "[SDP] Recv ACK from %#x seq:%#x\n", src, etp->curr_rev_msg.seq);
                 }
             }
         }
@@ -102,7 +102,7 @@ static __implemented void SimpleDPPRecvCallback(void *obj, const sdp_byte *data,
     else
     {
         // 3.3 其他地址，不处理
-        SDP_DEBUG(sdp, "[SDP] Recv other message from %#x, len: %d, data: %s\n", src, data_len, etp->curr_rev_msg.data);
+        SDP_DEBUG(sdp, "[SDP] Recv other message from %#x, len: %d, seq:%#x, data: %s\n", src, data_len, seq, etp->curr_rev_msg.data);
     }
 }
 
