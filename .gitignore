@@ -16,6 +16,7 @@
 *.clear
 A.m
 /test*/
+!/test/
 */__pycache__/
 python/test.py
 /qt/build*/
