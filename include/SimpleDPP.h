@@ -1,7 +1,6 @@
 #ifndef _SIMPLE_DPP_H_
 #define _SIMPLE_DPP_H_
 #include "ByteBuffer.h"
-#include "SimpleDPP_port.h"
 
 #include <stdarg.h>
 #include <stddef.h>
@@ -57,8 +56,8 @@ typedef int SimpleDPPERROR;
 #define SIMPLEDDP_DEFAULT_BUFFER_SIZE 1024
 #define SIMPLEDDP_DEFAULT_FRAME_REV_TIMEOUT 500 // ms
 
-typedef void (*SimpleDPPRecvCallback_t)(const sdp_byte *data, int len);
-typedef void (*SimpleDPPRevErrorCallback_t)(SimpleDPPERROR error_code);
+typedef void (*SimpleDPPRecvCallback_t)(void *obj, const sdp_byte *data, int len);
+typedef void (*SimpleDPPRevErrorCallback_t)(void *obj, SimpleDPPERROR error_code);
 typedef sdp_byte (*SimpleDPP_putchar_t)(sdp_byte c);
 
 typedef struct tagSimpleDPPAdapter
@@ -75,6 +74,13 @@ typedef struct tagSimpleDPPAdapter
     void (*error)(void *);
     // Log output interface, which can print the complete AT interaction process, fill in NULL if not required.
     void (*debug)(const char *fmt, ...);
+
+    void *write_buf;
+    uint32_t write_buf_capacity;
+    void *read_buf;
+    uint32_t read_buf_capacity;
+    SimpleDPPRecvCallback_t SimpleDPPRecvCallback;
+    SimpleDPPRevErrorCallback_t SimpleDPPRevErrorCallback;
 } SimpleDPPAdapter_t;
 
 /* SimpleDPP Class Structure */
@@ -84,16 +90,14 @@ typedef struct SimpleDPP_
     ByteBuffer recv_buffer;
     int SimpleDPPErrorCnt;
     int SimpleDPPRevState;
-    SimpleDPPRecvCallback_t SimpleDPPRecvCallback;
-    SimpleDPPRevErrorCallback_t SimpleDPPRevErrorCallback;
-
     uint32_t SimpleDPPFrameRevTimeout;
     uint32_t SimpleDPPFrameRevStartTick;
-    const SimpleDPPAdapter_t *adapter;
+    SimpleDPPAdapter_t *adapter;
+    void *obj;
 } SimpleDPP, *pSimpleDPP;
 
 // Externally provided methods
-void SimpleDPP_Constructor(SimpleDPP *sdp, sdp_byte *send_buffer, int send_buffer_capacity, sdp_byte *recv_buffer, int recv_buffer_capacity, SimpleDPPRecvCallback_t SimpleDPPRecvCallback, SimpleDPPRevErrorCallback_t SimpleDPPRevErrorCallback, const SimpleDPPAdapter_t *adapter);
+void SimpleDPP_Constructor(SimpleDPP *sdp, SimpleDPPAdapter_t *adapter);
 void SimpleDPP_Destructor(SimpleDPP *sdp);
 
 int send_datas_start(SimpleDPP *sdp);
@@ -112,10 +116,18 @@ int __SimpleDPP_send_datas_n(SimpleDPP *sdp, int arg_num, const sdp_byte *data, 
 void SimpleDPP_parse(SimpleDPP *sdp, sdp_byte c);
 int getSimpleDPPErrorCnt(SimpleDPP *sdp);
 
-bool SimpleDPP_isTimeout(uint32_t start, uint32_t timeout);
+
 void SimpeDPP_poll(SimpleDPP *sdp);
 static inline uint32_t SimpleDPP_getRecvBufSize(SimpleDPP *sdp)
 {
     return sdp->recv_buffer.size;
 }
+
+#define SDP_DEBUG(sdp, fmt, ...)                       \
+    do                                                 \
+    {                                                  \
+        if ((sdp)->adapter->debug)                     \
+            (sdp)->adapter->debug(fmt, ##__VA_ARGS__); \
+    } while (0)
+
 #endif // _SIMPLE_DPP_H_

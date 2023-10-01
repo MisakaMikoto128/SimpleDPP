@@ -1,15 +1,23 @@
 cmake_minimum_required(VERSION 3.5.0)
 project(SimpleDPP VERSION 1.1.0 LANGUAGES C)
-
+set(CMAKE_BUILD_TYPE "Debug")
 include(CTest)
 enable_testing()
 
 
 set(SRC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
+set(LIB_DIR ${CMAKE_CURRENT_SOURCE_DIR}/lib)
+set(TEST_DIR ${CMAKE_CURRENT_SOURCE_DIR}/test)
+
 set(INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include)
+set(INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/lib ${INCLUDE_DIR})
+set(INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/test ${INCLUDE_DIR})
+
 file(GLOB SOURCES ${SRC_DIR}/*.c)
+file(GLOB LIB_SOURCES ${LIB_DIR}/*.c)
+file(GLOB TEST_SOURCES ${TEST_DIR}/*.c)
 include_directories(${INCLUDE_DIR})
-add_executable(SimpleDPP ${SOURCES})
+add_executable(SimpleDPP ${SOURCES} ${LIB_SOURCES} ${TEST_SOURCES})
 
 set(CPACK_PROJECT_NAME ${PROJECT_NAME})
 set(CPACK_PROJECT_VERSION ${PROJECT_VERSION})

@@ -1,19 +1,18 @@
 #include "SimpleDPP.h"
-
+#include "SimpleDPP_port.h"
+static bool SimpleDPP_isTimeout(uint32_t start, uint32_t timeout);
 static void SimpleDPP_send_buffer(SimpleDPP *sdp);
 static void SimpleDPPRecvInnerCallback(SimpleDPP *sdp);
 static void SimpleDPPRevErrorInnerCallback(SimpleDPP *sdp, SimpleDPPERROR error_code);
 
 // #define SimpleDPP_ESCAPE_CHAR_LEN 2
 // static char SimpleDPP_control_byte_buf[SimpleDPP_ESCAPE_CHAR_LEN] = {0};
-void SimpleDPP_Constructor(SimpleDPP *sdp, sdp_byte *send_buffer, int send_buffer_capacity, sdp_byte *recv_buffer, int recv_buffer_capacity, SimpleDPPRecvCallback_t SimpleDPPRecvCallback, SimpleDPPRevErrorCallback_t SimpleDPPRevErrorCallback, const SimpleDPPAdapter_t *adapter)
+void SimpleDPP_Constructor(SimpleDPP *sdp, SimpleDPPAdapter_t *adapter)
 {
-    byte_buffer_setmemory(&sdp->send_buffer, send_buffer, send_buffer_capacity);
-    byte_buffer_setmemory(&sdp->recv_buffer, recv_buffer, recv_buffer_capacity);
+    byte_buffer_setmemory(&sdp->send_buffer, adapter->write_buf, adapter->write_buf_capacity);
+    byte_buffer_setmemory(&sdp->recv_buffer, adapter->read_buf, adapter->read_buf_capacity);
     sdp->SimpleDPPErrorCnt = 0;
     sdp->SimpleDPPRevState = SIMPLEDPP_REV_WAIT_START;
-    sdp->SimpleDPPRecvCallback = SimpleDPPRecvCallback;
-    sdp->SimpleDPPRevErrorCallback = SimpleDPPRevErrorCallback;
     sdp->SimpleDPPFrameRevTimeout = SIMPLEDDP_DEFAULT_FRAME_REV_TIMEOUT;
     sdp->SimpleDPPFrameRevStartTick = 0;
     sdp->adapter = adapter;
@@ -29,18 +28,18 @@ static void SimpleDPP_send_buffer(SimpleDPP *sdp)
 
 static void SimpleDPPRecvInnerCallback(SimpleDPP *sdp)
 {
-    if (sdp->SimpleDPPRecvCallback != NULL)
+    if (sdp->adapter->SimpleDPPRecvCallback != NULL)
     {
-        sdp->SimpleDPPRecvCallback(sdp->recv_buffer.data, sdp->recv_buffer.size);
+        sdp->adapter->SimpleDPPRecvCallback(sdp, sdp->recv_buffer.data, sdp->recv_buffer.size);
     }
     byte_buffer_clear(&sdp->recv_buffer);
 }
 
 static void SimpleDPPRevErrorInnerCallback(SimpleDPP *sdp, SimpleDPPERROR error_code)
 {
-    if (sdp->SimpleDPPRevErrorCallback != NULL)
+    if (sdp->adapter->SimpleDPPRevErrorCallback != NULL)
     {
-        sdp->SimpleDPPRevErrorCallback(error_code);
+        sdp->adapter->SimpleDPPRevErrorCallback(sdp, error_code);
     }
     byte_buffer_clear(&sdp->recv_buffer);
     sdp->SimpleDPPErrorCnt++;
@@ -275,7 +274,7 @@ void SimpleDPP_parse(SimpleDPP *sdp, sdp_byte c)
     }
 }
 
-bool SimpleDPP_isTimeout(uint32_t start, uint32_t timeout)
+static bool SimpleDPP_isTimeout(uint32_t start, uint32_t timeout)
 {
     return SimpleDPP_getMsTick() - start > timeout;
 }
