@@ -12,6 +12,18 @@ static void EasyTelRevInnerCallback(EasyTelPoint *etp, struct EasyTelMessage *ms
 static __implemented sdp_byte __send_data[SIMPLE_DPP_SEND_BUFFER_SIZE];
 static __implemented sdp_byte __recv_data[SIMPLE_DPP_REV_BUFFER_SIZE];
 
+static uint16_t EasyTel_obj_get_msg_crc(struct EasyTelMessage *msg)
+{
+    msg->crc = CRC16_Modbus_start();
+    msg->crc = CRC16_Modbus_update(msg->crc, (const uint8_t *)&msg->src, sizeof(msg->src));
+    msg->crc = CRC16_Modbus_update(msg->crc, (const uint8_t *)&msg->dst, sizeof(msg->dst));
+    msg->crc = CRC16_Modbus_update(msg->crc, (const uint8_t *)&msg->seq, sizeof(msg->seq));
+    msg->crc = CRC16_Modbus_update(msg->crc, (const uint8_t *)&msg->type, sizeof(msg->type));
+    msg->crc = CRC16_Modbus_update(msg->crc, (const uint8_t *)&msg->len, sizeof(msg->len));
+    msg->crc = CRC16_Modbus_update(msg->crc, (const uint8_t *)msg->data, msg->len);
+    return msg->crc;
+}
+
 static __implemented void SimpleDPPRecvCallback(void *obj, const sdp_byte *data, int len)
 {
 
@@ -67,13 +79,7 @@ static __implemented void SimpleDPPRecvCallback(void *obj, const sdp_byte *data,
             ack_msg.seq = seq + 1;
             ack_msg.type = ETP_MSG_TYPE_ACK;
             ack_msg.len = 0;
-            ack_msg.crc = CRC16_Modbus_start();
-            ack_msg.crc = CRC16_Modbus_update(ack_msg.crc, (const uint8_t *)&ack_msg.src, sizeof(ack_msg.src));
-            ack_msg.crc = CRC16_Modbus_update(ack_msg.crc, (const uint8_t *)&ack_msg.dst, sizeof(ack_msg.dst));
-            ack_msg.crc = CRC16_Modbus_update(ack_msg.crc, (const uint8_t *)&ack_msg.seq, sizeof(ack_msg.seq));
-            ack_msg.crc = CRC16_Modbus_update(ack_msg.crc, (const uint8_t *)&ack_msg.type, sizeof(ack_msg.type));
-            ack_msg.crc = CRC16_Modbus_update(ack_msg.crc, (const uint8_t *)&ack_msg.len, sizeof(ack_msg.len));
-            ack_msg.crc = CRC16_Modbus_update(ack_msg.crc, (const uint8_t *)ack_msg.data, ack_msg.len);
+            ack_msg.crc = EasyTel_obj_get_msg_crc(&ack_msg);
             SDP_DEBUG(sdp, "[SDP] Recv message from %#x, len: %d, data: %s\n", src, data_len, etp->curr_rev_msg.data);
             EsayTel_obj_write(etp, &ack_msg);
             SDP_DEBUG(sdp, "[SDP] Send ACK to %#x\n", src);
@@ -92,7 +98,8 @@ static __implemented void SimpleDPPRecvCallback(void *obj, const sdp_byte *data,
                 }
             }
         }
-    }else
+    }
+    else
     {
         // 3.3 其他地址，不处理
         SDP_DEBUG(sdp, "[SDP] Recv other message from %#x, len: %d, data: %s\n", src, data_len, etp->curr_rev_msg.data);
@@ -234,8 +241,15 @@ void EasyTel_obj_process(EasyTelPoint *etp)
     if (etp->have_write_task)
     {
         etp->have_write_task = false;
+
         SDP_DEBUG(&etp->sdp, "[SDP] Write task\n");
         EsayTel_obj_write(etp, &etp->curr_send_msg);
+
+        if (etp->curr_send_msg.dst == 0xFFFF)
+        {
+            etp->is_writeable = true;
+            etp->is_writing = false;
+        }
     }
 
     if (etp->is_writing)
@@ -276,14 +290,7 @@ bool EasyTel_obj_send(EasyTelPoint *etp, uint16_t dst, const void *data, uint32_
         etp->curr_send_msg.data[len] = '\0';
 
         // CRC
-        uint16_t crc = CRC16_Modbus_start();
-        crc = CRC16_Modbus_update(crc, (const uint8_t *)&etp->curr_send_msg.src, sizeof(etp->curr_send_msg.src));
-        crc = CRC16_Modbus_update(crc, (const uint8_t *)&etp->curr_send_msg.dst, sizeof(etp->curr_send_msg.dst));
-        crc = CRC16_Modbus_update(crc, (const uint8_t *)&etp->curr_send_msg.seq, sizeof(etp->curr_send_msg.seq));
-        crc = CRC16_Modbus_update(crc, (const uint8_t *)&etp->curr_send_msg.type, sizeof(etp->curr_send_msg.type));
-        crc = CRC16_Modbus_update(crc, (const uint8_t *)&etp->curr_send_msg.len, sizeof(etp->curr_send_msg.len));
-        crc = CRC16_Modbus_update(crc, (const uint8_t *)etp->curr_send_msg.data, etp->curr_send_msg.len);
-        etp->curr_send_msg.crc = crc;
+        etp->curr_send_msg.crc = EasyTel_obj_get_msg_crc(&etp->curr_send_msg);
 
         etp->write_start_time = SimpleDPP_getMsTick();
         etp->have_write_task = true;
